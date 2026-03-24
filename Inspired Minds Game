@@ -1,94 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simple Clicker Game</title>
-<style>
+<title>Brendan's Cool Game</title>
+  <style>
     body {
-        font-family: Arial, sans-serif;
-        text-align: center;
-        background-color: #f4f4f4;
-        margin: 0;
-        padding: 20px;
-    }
-    h1 {
-        color: #333;
-    }
-    #score {
-        font-size: 2em;
-        margin: 20px 0;
-    }
-    #clickButton {
-        padding: 20px 40px;
-        font-size: 1.5em;
-        background-color: #ff9800;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        color: white;
-    }
-    #clickButton:hover {
-        background-color: #e68900;
-    }
-    #upgradeButton {
-        margin-top: 20px;
-        padding: 10px 20px;
-        font-size: 1em;
-        background-color: #4caf50;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        color: white;
-    }
-    #upgradeButton:disabled {
-        background-color: #888;
-        cursor: not-allowed;
-    }
-</style>
+  background-color: black;
+}
+
+h1 {
+  color: white;
+  text-align: center;
+}
+
+p {
+  font family: Helvetica Neue
+  font-size: 20px;
+}
+  </style>
 </head>
 <body>
-
-<h1>Clicker Game</h1>
-<div id="score">Score: 0</div>
-<button id="clickButton">Click Me!</button>
-<br>
-<button id="upgradeButton" disabled>Buy Upgrade (Cost: 50)</button>
-
-<script>
-    let score = 0;
-    let pointsPerClick = 1;
-    let upgradeCost = 50;
-
-    const scoreDisplay = document.getElementById('score');
-    const clickButton = document.getElementById('clickButton');
-    const upgradeButton = document.getElementById('upgradeButton');
-
-    // Update score display
-    function updateScore() {
-        scoreDisplay.textContent = `Score: ${score}`;
-        upgradeButton.disabled = score < upgradeCost;
-    }
-
-    // Handle click button
-    clickButton.addEventListener('click', () => {
-        score += pointsPerClick;
-        updateScore();
-    });
-
-    // Handle upgrade purchase
-    upgradeButton.addEventListener('click', () => {
-        if (score >= upgradeCost) {
-            score -= upgradeCost;
-            pointsPerClick++;
-            upgradeCost = Math.floor(upgradeCost * 1.5); // Increase cost
-            upgradeButton.textContent = `Buy Upgrade (Cost: ${upgradeCost})`;
-            updateScore();
-        }
-    });
-
-    updateScore();
-</script>
-
-</body>
-</html>
+<h1 style="color:darkblue;">Brendan's Cool Game Right Now! (Under Construction)</h1>
+<
