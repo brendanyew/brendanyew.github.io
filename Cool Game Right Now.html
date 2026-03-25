@@ -1,35 +1,185 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Clicker Game</title>
-  <style>
-    body {
-      text-align: center;
-      font-family: Arial;
-      margin-top: 50px;
-    }
-    button {
-      font-size: 20px;
-      padding: 15px 30px;
-      cursor: pointer;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Brendan's Cool Clicker Game</title>
+
+<!-- PWA manifest -->
+<link rel="manifest" href="manifest.json">
+
+<style>
+body {
+  background: black;
+  color: white;
+  font-family: Arial;
+  text-align: center;
+}
+button {
+  background: #007BFF;
+  color: white;
+  border: none;
+  padding: 10px;
+  margin: 5px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+button:hover {
+  background: #0056b3;
+}
+.box { margin-top: 20px; }
+</style>
 </head>
+
 <body>
 
-  <h1>Clicker Game</h1>
-  <p>Score: <span id="score">0</span></p>
+<h1>Brendan's Cool Clicker Game</h1>
 
-  <button onclick="addScore()">Click me!</button>
+<p>Score: <span id="score">0</span></p>
 
-  <script>
-    let score = 0;
+<button onclick="clickScore()">Click</button>
 
-    function addScore() {
-      score++;
-      document.getElementById("score").textContent = score;
+<div class="box">
+<h2>Per Click Upgrades</h2>
+<div id="clickUpgrades"></div>
+</div>
+
+<div class="box">
+<h2>Auto Clickers</h2>
+<div id="autoUpgrades"></div>
+</div>
+
+<div class="box">
+<h2>Achievements</h2>
+<ul id="achievementsList"></ul>
+</div>
+
+<script>
+// ===== GAME VARIABLES =====
+let score = 0;
+let perClick = 1;
+let perSecond = 0;
+let totalClicks = 0;
+let achievements = [];
+
+// ===== NUMBER FORMATTING =====
+const units=["","K","M","B","T","QUAD","QUIN","SEX","SEP","OCT","NON","DEC","UNDEC","DUODEC","TREDEC","QUATTORDEC","QUINDEC","SEXDEC","SEPTENDEC","OCTODEC","NOVEMDEC","VIG","UNVIG"];
+function formatNumber(num){
+  let i=0;
+  while(num>=1000 && i<units.length-1){ num/=1000;i++; }
+  return num.toFixed(1)+units[i];
+}
+
+// ===== UPGRADES =====
+const upgradeValues=[
+1.5,2,2.5,3,4,6,10,20,40,50,100,200,500,
+1e3,1.5e3,2e3,1e4,5e4,1e5,5e5,
+1e6,1e7,5e7,1e8,5e8,
+1e9,1e10,5e10,1e11,5e11,
+1e12,1e13,1e14,5e14,
+1e15,1e16,1e17,5e17,
+1e18,1e19,1e20,5e20,
+1e21,1e22,1e23,5e23,
+1e24,1e25,1e26,5e26,
+1e27,1e28,1e29,5e29,
+1e30,1e31,1e32,5e32,
+1e33,1e34,1e35,5e35,
+1e36,1e37,1e38,5e38,
+1e63,5e63,1e64,1e65,5e65,1e66
+];
+
+let clickUpgrades=[], autoUpgrades=[];
+upgradeValues.forEach((v,i)=>{
+  clickUpgrades.push({value:v,cost:10**(i+1)});
+  autoUpgrades.push({value:v,cost:10**(i+2)});
+});
+
+// ===== RENDER UPGRADES =====
+function renderUpgrades(){
+  let c=document.getElementById("clickUpgrades");
+  let a=document.getElementById("autoUpgrades");
+  c.innerHTML=""; a.innerHTML="";
+  clickUpgrades.forEach((u,i)=>{
+    let b=document.createElement("button");
+    b.innerText=`+${formatNumber(u.value)} (${formatNumber(u.cost)})`;
+    b.onclick=()=>buyClick(i);
+    c.appendChild(b);
+  });
+  autoUpgrades.forEach((u,i)=>{
+    let b=document.createElement("button");
+    b.innerText=`+${formatNumber(u.value)}/s (${formatNumber(u.cost)})`;
+    b.onclick=()=>buyAuto(i);
+    a.appendChild(b);
+  });
+}
+
+// ===== BUY FUNCTIONS =====
+function buyClick(i){
+  let u=clickUpgrades[i];
+  if(score>=u.cost){ score-=u.cost; perClick+=u.value; u.cost*=2; }
+}
+function buyAuto(i){
+  let u=autoUpgrades[i];
+  if(score>=u.cost){ score-=u.cost; perSecond+=u.value; u.cost*=2; }
+}
+
+// ===== CLICK FUNCTION =====
+let lastClick=0;
+function clickScore(){
+  score+=perClick;
+  totalClicks++;
+  let now=Date.now();
+  if(now-lastClick<9 && !achievements.includes("fast")){
+    achievements.push("fast");
+    alert("Fast Clicker!");
+  }
+  lastClick=now;
+  checkAchievements();
+}
+
+// ===== ACHIEVEMENTS =====
+const milestones=[100,200,400,800,1000,5000,10000,100000,1e6,1e9,1e12,1e15,1e18,1e21,1e24,1e27,1e36,1e63,1e66];
+function checkAchievements(){
+  milestones.forEach(m=>{
+    if(totalClicks>=m && !achievements.includes(m)){
+      achievements.push(m);
+      alert(formatNumber(m)+" clicks!");
     }
-  </script>
+  });
+}
+
+// ===== UPDATE DISPLAY =====
+function update(){
+  document.getElementById("score").innerText=formatNumber(score);
+  let list=document.getElementById("achievementsList");
+  list.innerHTML="";
+  achievements.forEach(a=>{
+    let li=document.createElement("li");
+    li.innerText=(a==="fast")?"Fast Clicker ⚡":formatNumber(a)+" clicks";
+    list.appendChild(li);
+  });
+  renderUpgrades();
+}
+
+// ===== AUTO CLICKER LOOP =====
+setInterval(()=>{ score+=perSecond; update(); },1000);
+
+// ===== SAVE / LOAD =====
+function save(){
+  localStorage.setItem("game",JSON.stringify({score,perClick,perSecond,totalClicks,achievements}));
+}
+function load(){
+  let data=JSON.parse(localStorage.getItem("game"));
+  if(data){ score=data.score; perClick=data.perClick; perSecond=data.perSecond; totalClicks=data.totalClicks; achievements=data.achievements; }
+  update();
+}
+setInterval(save,5000);
+load();
+
+// ===== SERVICE WORKER FOR OFFLINE =====
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
 
 </body>
 </html>
