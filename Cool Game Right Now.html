@@ -2,184 +2,138 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Brendan's Cool Clicker Game</title>
-
-<!-- PWA manifest -->
-<link rel="manifest" href="manifest.json">
-
+<title>Brendan's Cool Clicker Game - Widget</title>
 <style>
-body {
+body { margin:0; padding:0; }
+#clickerWidget {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  width: 240px;
   background: black;
   color: white;
-  font-family: Arial;
-  text-align: center;
-}
-button {
-  background: #007BFF;
-  color: white;
-  border: none;
-  padding: 10px;
-  margin: 5px;
+  border: 2px solid #007BFF;
   border-radius: 10px;
-  cursor: pointer;
+  font-family: Arial, sans-serif;
+  z-index: 9999;
+  user-select: none;
 }
-button:hover {
-  background: #0056b3;
+#widgetHeader {
+  cursor: move;
+  padding: 5px;
+  text-align: center;
+  background: #007BFF;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
 }
-.box { margin-top: 20px; }
+#widgetBody { padding: 5px; display: none; max-height: 450px; overflow-y: auto; }
+button { background:#007BFF; color:white; border:none; border-radius:5px; padding:5px; margin:3px; cursor:pointer; }
+button:hover { background:#0056b3; }
+#toggleBody { margin-top:5px; width:100%; }
+.box { margin-top: 10px; }
 </style>
 </head>
-
 <body>
 
-<h1>Brendan's Cool Clicker Game</h1>
+<div id="clickerWidget">
+  <div id="widgetHeader">Brendan's Cool Clicker Game</div>
+  <div id="widgetBody">
+    <p>Score: <span id="score">0</span></p>
+    <button id="clickButton">Click</button>
 
-<p>Score: <span id="score">0</span></p>
+    <div class="box">
+      <h3>Per Click Upgrades</h3>
+      <div id="clickUpgrades"></div>
+    </div>
 
-<button onclick="clickScore()">Click</button>
+    <div class="box">
+      <h3>Auto Clickers</h3>
+      <div id="autoUpgrades"></div>
+    </div>
 
-<div class="box">
-<h2>Per Click Upgrades</h2>
-<div id="clickUpgrades"></div>
-</div>
+    <div class="box">
+      <h3>Achievements</h3>
+      <ul id="achievementsList"></ul>
+    </div>
 
-<div class="box">
-<h2>Auto Clickers</h2>
-<div id="autoUpgrades"></div>
-</div>
-
-<div class="box">
-<h2>Achievements</h2>
-<ul id="achievementsList"></ul>
+    <h3>Settings</h3>
+    <button onclick="resetGame()">Reset Game</button>
+    <button onclick="downloadSave()">Download Save</button>
+    <input type="file" id="uploadFile" onchange="uploadSave(event)">
+  </div>
+  <button id="toggleBody">Show/Hide Widget</button>
 </div>
 
 <script>
-// ===== GAME VARIABLES =====
-let score = 0;
-let perClick = 1;
-let perSecond = 0;
-let totalClicks = 0;
-let achievements = [];
+// ===== DRAGGING WIDGET =====
+const widget=document.getElementById('clickerWidget');
+const header=document.getElementById('widgetHeader');
+let isDragging=false, offsetX=0, offsetY=0;
+header.addEventListener('mousedown',e=>{ isDragging=true; offsetX=e.offsetX; offsetY=e.offsetY; });
+document.addEventListener('mouseup',()=>isDragging=false);
+document.addEventListener('mousemove',e=>{ if(isDragging){ widget.style.right=''; widget.style.bottom=''; widget.style.left=(e.clientX-offsetX)+'px'; widget.style.top=(e.clientY-offsetY)+'px'; } });
 
-// ===== NUMBER FORMATTING =====
+// ===== TOGGLE BODY =====
+const toggleBtn=document.getElementById('toggleBody');
+const bodyDiv=document.getElementById('widgetBody');
+toggleBtn.addEventListener('click',()=>{ bodyDiv.style.display=bodyDiv.style.display==='none'?'block':'none'; });
+
+// ===== GAME VARIABLES =====
+let score=0, perClick=1, perSecond=0, totalClicks=0, achievements=[];
 const units=["","K","M","B","T","QUAD","QUIN","SEX","SEP","OCT","NON","DEC","UNDEC","DUODEC","TREDEC","QUATTORDEC","QUINDEC","SEXDEC","SEPTENDEC","OCTODEC","NOVEMDEC","VIG","UNVIG"];
-function formatNumber(num){
-  let i=0;
-  while(num>=1000 && i<units.length-1){ num/=1000;i++; }
-  return num.toFixed(1)+units[i];
-}
+function formatNumber(num){ let i=0; while(num>=1000 && i<units.length-1){ num/=1000;i++; } return num.toFixed(1)+units[i]; }
 
 // ===== UPGRADES =====
-const upgradeValues=[
-1.5,2,2.5,3,4,6,10,20,40,50,100,200,500,
-1e3,1.5e3,2e3,1e4,5e4,1e5,5e5,
-1e6,1e7,5e7,1e8,5e8,
-1e9,1e10,5e10,1e11,5e11,
-1e12,1e13,1e14,5e14,
-1e15,1e16,1e17,5e17,
-1e18,1e19,1e20,5e20,
-1e21,1e22,1e23,5e23,
-1e24,1e25,1e26,5e26,
-1e27,1e28,1e29,5e29,
-1e30,1e31,1e32,5e32,
-1e33,1e34,1e35,5e35,
-1e36,1e37,1e38,5e38,
-1e63,5e63,1e64,1e65,5e65,1e66
-];
-
+const upgradeValues=[1.5,2,2.5,3,4,6,10,20,40,50,100,200,500,1e3,1.5e3,2e3,1e4,5e4,1e5,5e5,1e6,1e7,5e7,1e8,5e8,1e9,1e10,5e10,1e11,5e11,1e12,1e13,1e14,5e14,1e15,1e16,1e17,5e17,1e18,1e19,1e20,5e20,1e21,1e22,1e23,5e23,1e24,1e25,1e26,5e26,1e27,1e28,1e29,5e29,1e30,1e31,1e32,5e32,1e33,1e34,1e35,5e35,1e36,1e37,1e38,5e38,1e63,5e63,1e64,1e65,5e65,1e66];
 let clickUpgrades=[], autoUpgrades=[];
-upgradeValues.forEach((v,i)=>{
-  clickUpgrades.push({value:v,cost:10**(i+1)});
-  autoUpgrades.push({value:v,cost:10**(i+2)});
-});
+upgradeValues.forEach((v,i)=>{ clickUpgrades.push({value:v,cost:10**(i+1)}); autoUpgrades.push({value:v,cost:10**(i+2)}); });
 
 // ===== RENDER UPGRADES =====
 function renderUpgrades(){
-  let c=document.getElementById("clickUpgrades");
-  let a=document.getElementById("autoUpgrades");
+  let c=document.getElementById("clickUpgrades"), a=document.getElementById("autoUpgrades");
   c.innerHTML=""; a.innerHTML="";
-  clickUpgrades.forEach((u,i)=>{
-    let b=document.createElement("button");
-    b.innerText=`+${formatNumber(u.value)} (${formatNumber(u.cost)})`;
-    b.onclick=()=>buyClick(i);
-    c.appendChild(b);
-  });
-  autoUpgrades.forEach((u,i)=>{
-    let b=document.createElement("button");
-    b.innerText=`+${formatNumber(u.value)}/s (${formatNumber(u.cost)})`;
-    b.onclick=()=>buyAuto(i);
-    a.appendChild(b);
-  });
+  clickUpgrades.forEach((u,i)=>{ let b=document.createElement("button"); b.innerText=`+${formatNumber(u.value)} (${formatNumber(u.cost)})`; b.onclick=()=>buyClick(i); c.appendChild(b); });
+  autoUpgrades.forEach((u,i)=>{ let b=document.createElement("button"); b.innerText=`+${formatNumber(u.value)}/s (${formatNumber(u.cost)})`; b.onclick=()=>buyAuto(i); a.appendChild(b); });
 }
 
 // ===== BUY FUNCTIONS =====
-function buyClick(i){
-  let u=clickUpgrades[i];
-  if(score>=u.cost){ score-=u.cost; perClick+=u.value; u.cost*=2; }
-}
-function buyAuto(i){
-  let u=autoUpgrades[i];
-  if(score>=u.cost){ score-=u.cost; perSecond+=u.value; u.cost*=2; }
-}
+function buyClick(i){ let u=clickUpgrades[i]; if(score>=u.cost){ score-=u.cost; perClick+=u.value; u.cost*=2; } }
+function buyAuto(i){ let u=autoUpgrades[i]; if(score>=u.cost){ score-=u.cost; perSecond+=u.value; u.cost*=2; } }
 
 // ===== CLICK FUNCTION =====
 let lastClick=0;
-function clickScore(){
-  score+=perClick;
-  totalClicks++;
-  let now=Date.now();
-  if(now-lastClick<9 && !achievements.includes("fast")){
-    achievements.push("fast");
-    alert("Fast Clicker!");
-  }
-  lastClick=now;
-  checkAchievements();
-}
+document.getElementById("clickButton").addEventListener('click',()=>{ score+=perClick; totalClicks++; let now=Date.now(); if(now-lastClick<9 && !achievements.includes("fast")){ achievements.push("fast"); alert("Fast Clicker!"); } lastClick=now; checkAchievements(); });
 
 // ===== ACHIEVEMENTS =====
 const milestones=[100,200,400,800,1000,5000,10000,100000,1e6,1e9,1e12,1e15,1e18,1e21,1e24,1e27,1e36,1e63,1e66];
-function checkAchievements(){
-  milestones.forEach(m=>{
-    if(totalClicks>=m && !achievements.includes(m)){
-      achievements.push(m);
-      alert(formatNumber(m)+" clicks!");
-    }
-  });
-}
+function checkAchievements(){ milestones.forEach(m=>{ if(totalClicks>=m && !achievements.includes(m)){ achievements.push(m); alert(formatNumber(m)+" clicks!"); } }); }
 
 // ===== UPDATE DISPLAY =====
-function update(){
-  document.getElementById("score").innerText=formatNumber(score);
-  let list=document.getElementById("achievementsList");
-  list.innerHTML="";
-  achievements.forEach(a=>{
-    let li=document.createElement("li");
-    li.innerText=(a==="fast")?"Fast Clicker ⚡":formatNumber(a)+" clicks";
-    list.appendChild(li);
-  });
-  renderUpgrades();
-}
+function update(){ document.getElementById("score").innerText=formatNumber(score); let list=document.getElementById("achievementsList"); list.innerHTML=""; achievements.forEach(a=>{ let li=document.createElement("li"); li.innerText=(a==="fast")?"Fast Clicker ⚡":formatNumber(a)+" clicks"; list.appendChild(li); }); renderUpgrades(); }
 
 // ===== AUTO CLICKER LOOP =====
 setInterval(()=>{ score+=perSecond; update(); },1000);
 
 // ===== SAVE / LOAD =====
-function save(){
-  localStorage.setItem("game",JSON.stringify({score,perClick,perSecond,totalClicks,achievements}));
-}
-function load(){
-  let data=JSON.parse(localStorage.getItem("game"));
-  if(data){ score=data.score; perClick=data.perClick; perSecond=data.perSecond; totalClicks=data.totalClicks; achievements=data.achievements; }
-  update();
-}
-setInterval(save,5000);
-load();
+function save(){ localStorage.setItem("game",JSON.stringify({score,perClick,perSecond,totalClicks,achievements})); }
+function load(){ let data=JSON.parse(localStorage.getItem("game")); if(data){ score=data.score; perClick=data.perClick; perSecond=data.perSecond; totalClicks=data.totalClicks; achievements=data.achievements; } update(); }
+setInterval(save,5000); load();
 
-// ===== SERVICE WORKER FOR OFFLINE =====
+// ===== SETTINGS =====
+function resetGame(){ if(confirm("Reset all progress?")){ score=0; perClick=1; perSecond=0; totalClicks=0; achievements=[]; save(); update(); alert("Game reset."); } }
+function downloadSave(){ const data=new Blob([localStorage.getItem("game")],{type:"application/json"}); const url=URL.createObjectURL(data); const a=document.createElement("a"); a.href=url; a.download="clicker_save.json"; a.click(); URL.revokeObjectURL(url); }
+function uploadSave(event){ const file=event.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=e=>{ localStorage.setItem("game",e.target.result); load(); alert("Save loaded!"); }; reader.readAsText(file); }
+
+// ===== INLINE SERVICE WORKER =====
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js');
+  const swCode=`const CACHE="clicker-v1";self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(["./"])))});self.addEventListener("fetch",e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))});`;
+  const blob=new Blob([swCode],{type:"application/javascript"});
+  navigator.serviceWorker.register(URL.createObjectURL(blob));
 }
-</script>
 
+// ===== INLINE MANIFEST =====
+const manifest = { "name":"Brendan's Cool Clicker Game", "short_name":"Clicker", "start_url":"./", "display":"standalone", "background_color":"#000000", "theme_color":"#007BFF" };
+const link=document.createElement('link'); link.rel='manifest'; link.href=URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/json'})); document.head.appendChild(link);
+</script>
 </body>
 </html>
