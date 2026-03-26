@@ -3,71 +3,38 @@
 <head>
 <meta charset="UTF-8">
 <title>Brendan's Cool Clicker Game</title>
-
 <style>
-body {
-  background: black;
-  color: white;
-  font-family: Arial;
-  text-align: center;
-  margin:0;
-}
-
-button {
-  background:#007BFF;
-  color:white;
-  border:none;
-  padding:8px;
-  margin:4px;
-  border-radius:8px;
-  cursor:pointer;
-}
-button:hover { background:#0056b3; }
-
-.box { margin-top:20px; }
-
-#message { color:red; height:20px; }
-
-/* ===== STATS BAR ===== */
-.stats {
-  margin:10px;
-  font-size:14px;
-}
-
-/* ===== WIDGET MODE ===== */
-.widget-mode #appContainer {
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
-  width: 260px;
-  height: 420px;
-  overflow-y: auto;
-  border: 2px solid #007BFF;
-  border-radius: 10px;
-  background: black;
-}
+body {background:black;color:white;font-family:Arial;text-align:center;margin:0;}
+button {background:#007BFF;color:white;border:none;padding:8px;margin:4px;border-radius:8px;cursor:pointer;white-space:pre-line;width:90%;font-size:12px;}
+button:hover{background:#0056b3;}
+#appContainer{margin:10px;}
+.box{margin-top:20px;}
+#message{color:red;height:20px;}
+.stats{margin:10px;font-size:14px;}
+.widget-mode #appContainer{position:fixed;bottom:10px;right:10px;width:260px;height:480px;overflow-y:auto;border:2px solid #007BFF;border-radius:10px;background:black;}
+#progressContainer{width:90%;height:20px;background:#222;margin:auto;border-radius:10px;overflow:hidden;}
+#progressBar{height:100%;width:0%;background:#007BFF;transition:width 0.2s;}
+#popupContainer{position:fixed;top:10px;right:10px;}
+.popup{background:#007BFF;color:white;padding:10px;margin:5px;border-radius:8px;animation:fade 2s forwards;}
+@keyframes fade{0%{opacity:1;}100%{opacity:0;}}
+#clickBtn:active{transform:scale(0.9);}
 </style>
 </head>
-
 <body>
-
 <div id="appContainer">
-
 <h1>Brendan's Cool Clicker Game</h1>
-
-<button onclick="showGame()">Game</button>
-<button onclick="showSettings()">Settings</button>
+<button onclick="showGame()">Game</button><button onclick="showSettings()">Settings</button>
 
 <p>Score: <span id="score">0</span></p>
-
 <div class="stats">
-  🖱 Per Click: <span id="perClickDisplay">1</span><br>
-  ⚡ Per Second: <span id="perSecondDisplay">0</span>
+🖱 Per Click: <span id="perClickDisplay">1</span><br>
+⚡ Per Second: <span id="perSecondDisplay">0</span><br>
+Prestige Level: <span id="prestigeDisplay">0</span>
 </div>
 
 <p id="message"></p>
 
-<button onclick="clickScore()">Click</button>
+<button id="clickBtn" onclick="clickScore()">Click</button>
 
 <div id="gamePage">
 
@@ -82,222 +49,161 @@ button:hover { background:#0056b3; }
 </div>
 
 <div class="box">
+<h2>Progress to Next Upgrade</h2>
+<div id="progressContainer"><div id="progressBar"></div></div>
+<p id="progressText"></p>
+</div>
+
+<div class="box">
 <h2>Achievements</h2>
 <ul id="achievementsList"></ul>
+</div>
+
+<div class="box">
+<h2>Leaderboard</h2>
+<ol id="leaderboard"></ol>
 </div>
 
 </div>
 
 <div id="settingsPage" style="display:none;">
 <h2>Settings</h2>
-
 <button onclick="installApp()">Install Widget Version</button><br>
 <button onclick="resetGame()">Reset Game</button><br>
+<button onclick="prestigeReset()">Prestige (Rebirth)</button><br>
 <button onclick="downloadSave()">Download Save</button><br>
 <input type="file" onchange="uploadSave(event)">
-
 </div>
 
+<div id="popupContainer"></div>
 </div>
 
 <script>
-// ===== INSTALL SYSTEM =====
+// INSTALL / WIDGET
 let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e)=>{
-  e.preventDefault();
-  deferredPrompt = e;
-});
-function installApp(){
-  if(deferredPrompt){
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(()=>{ deferredPrompt=null; });
-  } else alert("Install not available");
-}
+window.addEventListener('beforeinstallprompt', e=>{e.preventDefault();deferredPrompt=e;});
+function installApp(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;});}else alert("Install not available");}
+if(window.matchMedia('(display-mode: standalone)').matches) document.body.classList.add("widget-mode");
 
-// ===== WIDGET MODE =====
-if(window.matchMedia('(display-mode: standalone)').matches){
-  document.body.classList.add("widget-mode");
-}
+// GAME VARIABLES
+let score=0, perClick=1, perSecond=0, totalClicks=0, achievements=[], prestige=0;
+let clickIndex=0, autoIndex=0;
+let leaderboard = JSON.parse(localStorage.getItem("leaderboard"))||[];
 
-// ===== GAME VARIABLES =====
-let score=0, perClick=1, perSecond=0, totalClicks=0, achievements=[];
+// UNITS
+const units=["","K","M","B","T","QUAD","QUIN","SEX","SEP","OCT","NON","DEC","UNDEC","DUODEC","TREDEC","QUATTORDEC","QUINDEC","SEXDEC","SEPTENDEC","OCTODEC","NOVEMDEC","VIG","UNVIG"];
+function formatNumber(num){if(num<1000) return Math.floor(num);let i=0;while(num>=1000 && i<units.length-1){num/=1000;i++;}return num.toFixed(2)+units[i];}
 
-// ===== FORMAT =====
-const units=["","K","M","B","T","QUAD","QUIN","SEX","SEP","OCT","NON","DEC","UNDEC","VIG","UNVIG"];
-function formatNumber(num){
-  let i=0;
-  while(num>=1000 && i<units.length-1){ num/=1000; i++; }
-  return num.toFixed(1)+units[i];
-}
-
-// ===== MESSAGE =====
-function showMessage(text){
-  let m=document.getElementById("message");
-  m.innerText=text;
-  setTimeout(()=>m.innerText="",2000);
-}
-
-// ===== UPGRADES =====
+// UPGRADES
 const upgradeValues=[1.5,2,2.5,3,4,6,10,20,40,50,100,200,500,1e3,1e4,1e6,1e9,1e12,1e15];
-
 let clickUpgrades=[], autoUpgrades=[];
 upgradeValues.forEach(v=>{
-  clickUpgrades.push({value:v,cost:v*10});
-  autoUpgrades.push({value:v,cost:v*20});
+  clickUpgrades.push({value:v,cost:v*10,desc:`Increase clicks per click by ${formatNumber(v)}`});
+  autoUpgrades.push({value:v,cost:v*20,desc:`Gain ${formatNumber(v)} clicks per second`});
 });
 
-// ===== RENDER =====
-function renderUpgrades(){
-  let c=document.getElementById("clickUpgrades");
-  let a=document.getElementById("autoUpgrades");
-  c.innerHTML=""; a.innerHTML="";
+// SOUND
+const clickSound = new Audio("https://www.soundjay.com/buttons/sounds/button-16.mp3");
 
-  clickUpgrades.forEach((u,i)=>{
-    let b=document.createElement("button");
-    b.innerText=`+${formatNumber(u.value)} (${formatNumber(u.cost)})`;
-    b.onclick=()=>buyClick(i);
-    b.disabled = score < u.cost;
-    c.appendChild(b);
-  });
-
-  autoUpgrades.forEach((u,i)=>{
-    let b=document.createElement("button");
-    b.innerText=`+${formatNumber(u.value)}/s (${formatNumber(u.cost)})`;
-    b.onclick=()=>buyAuto(i);
-    b.disabled = score < u.cost;
-    a.appendChild(b);
-  });
+// UPDATE FUNCTIONS
+function updateStatsOnly(){
+  document.getElementById("score").innerText=formatNumber(score);
+  document.getElementById("perClickDisplay").innerText=formatNumber(perClick);
+  document.getElementById("perSecondDisplay").innerText=formatNumber(perSecond);
+  document.getElementById("prestigeDisplay").innerText=prestige;
+  updateProgress();
+  updateLeaderboard();
+}
+function update(){updateStatsOnly();renderUpgrades();renderAchievements();}
+function updateProgress(){
+  let nextClick=clickUpgrades[clickIndex], nextAuto=autoUpgrades[autoIndex];
+  let target=Math.min(nextClick?nextClick.cost:Infinity,nextAuto?nextAuto.cost:Infinity);
+  let percent=Math.min((score/target)*100,100);
+  document.getElementById("progressBar").style.width=percent+"%";
+  document.getElementById("progressText").innerText=`Progress: ${percent.toFixed(1)}% (Next cost: ${formatNumber(target)})`;
+}
+function updateLeaderboard(){
+  let list=document.getElementById("leaderboard");
+  list.innerHTML="";
+  leaderboard.forEach((s,i)=>{let li=document.createElement("li");li.innerText="#" + (i+1) + " - " + formatNumber(s);list.appendChild(li);});
 }
 
-// ===== BUY =====
-function buyClick(i){
-  let u=clickUpgrades[i];
-  if(score>=u.cost){
-    score-=u.cost;
-    perClick+=u.value;
-    u.cost*=1.5;
-  } else {
-    showMessage("❌ Not enough clicks! Need: "+formatNumber(u.cost));
-  }
-}
-
-function buyAuto(i){
-  let u=autoUpgrades[i];
-  if(score>=u.cost){
-    score-=u.cost;
-    perSecond+=u.value;
-    u.cost*=1.5;
-  } else {
-    showMessage("❌ Not enough clicks! Need: "+formatNumber(u.cost));
-  }
-}
-
-// ===== CLICK =====
-let lastClick=0;
-function clickScore(){
-  score+=perClick;
-  totalClicks++;
-
-  let now=Date.now();
-  if(now-lastClick<9 && !achievements.includes("fast")){
-    achievements.push("fast");
-    alert("Fast Clicker!");
-  }
-  lastClick=now;
-
-  checkAchievements();
-}
-
-// ===== ACHIEVEMENTS =====
+// ACHIEVEMENTS
+function showPopup(text){let div=document.createElement("div");div.className="popup";div.innerText=text;document.getElementById("popupContainer").appendChild(div);setTimeout(()=>div.remove(),2000);}
 const milestones=[100,200,400,800,1000,5000,10000,100000,1e6,1e9,1e12];
-function checkAchievements(){
+function checkAchievements(triggerPopup=true){
   milestones.forEach(m=>{
     if(totalClicks>=m && !achievements.includes(m)){
       achievements.push(m);
-      alert(formatNumber(m)+" clicks!");
+      if(triggerPopup) showPopup(formatNumber(m)+" clicks!");
     }
   });
 }
 
-// ===== UPDATE =====
-function update(){
-  document.getElementById("score").innerText=formatNumber(score);
-  document.getElementById("perClickDisplay").innerText=formatNumber(perClick);
-  document.getElementById("perSecondDisplay").innerText=formatNumber(perSecond);
-
-  let list=document.getElementById("achievementsList");
-  list.innerHTML="";
-  achievements.forEach(a=>{
-    let li=document.createElement("li");
-    li.innerText=(a==="fast")?"Fast Clicker ⚡":formatNumber(a)+" clicks";
-    list.appendChild(li);
-  });
-
-  renderUpgrades();
+// CLICK ANIMATION
+function spawnClickText(){
+  let el=document.createElement("div");el.innerText="+"+formatNumber(perClick);el.style.position="absolute";
+  let rect=document.getElementById("clickBtn").getBoundingClientRect();
+  el.style.left=rect.left+"px";el.style.top=rect.top+"px";el.style.color="#00ffcc";el.style.opacity=1;
+  document.body.appendChild(el);
+  let y=0;let anim=setInterval(()=>{y+=2;el.style.top=(el.offsetTop-2)+"px";el.style.opacity-=0.05;if(el.style.opacity<=0){clearInterval(anim);el.remove();}},16);
 }
 
-setInterval(()=>{ score+=perSecond; update(); },1000);
-
-// ===== SAVE =====
-function save(){
-  localStorage.setItem("game",JSON.stringify({score,perClick,perSecond,totalClicks,achievements}));
-}
-function load(){
-  let d=JSON.parse(localStorage.getItem("game"));
-  if(d){ Object.assign(window,d); }
-  update();
-}
-setInterval(save,5000); load();
-
-// ===== SETTINGS =====
-function showSettings(){
-  document.getElementById("gamePage").style.display="none";
-  document.getElementById("settingsPage").style.display="block";
-}
-function showGame(){
-  document.getElementById("settingsPage").style.display="none";
-  document.getElementById("gamePage").style.display="block";
+// CLICK SCORE
+function clickScore(){
+  score+=perClick;totalClicks++;
+  spawnClickText();clickSound.currentTime=0;clickSound.play();
+  checkAchievements();
+  updateStatsOnly();
 }
 
-function resetGame(){
-  if(confirm("Reset progress?")){
-    score=0; perClick=1; perSecond=0; totalClicks=0; achievements=[];
-    save(); update();
+// RENDER UPGRADES
+function renderUpgrades(){
+  let c=document.getElementById("clickUpgrades");let a=document.getElementById("autoUpgrades");
+  c.innerHTML="";a.innerHTML="";
+  for(let i=0;i<3;i++){
+    if(clickIndex+i<clickUpgrades.length){
+      let u=clickUpgrades[clickIndex+i];let b=document.createElement("button");
+      b.innerText=`+${formatNumber(u.value)} / click | Cost: ${formatNumber(u.cost)}\n${u.desc}`;
+      if(i===0){b.onclick=()=>buyClick();if(score<u.cost)b.disabled=true;}else{b.disabled=true;b.style.opacity="0.5";}
+      c.appendChild(b);
+    }
+    if(autoIndex+i<autoUpgrades.length){
+      let u=autoUpgrades[autoIndex+i];let b=document.createElement("button");
+      b.innerText=`+${formatNumber(u.value)} / sec | Cost: ${formatNumber(u.cost)}\n${u.desc}`;
+      if(i===0){b.onclick=()=>buyAuto();if(score<u.cost)b.disabled=true;}else{b.disabled=true;b.style.opacity="0.5";}
+      a.appendChild(b);
+    }
   }
 }
 
-function downloadSave(){
-  const blob=new Blob([localStorage.getItem("game")],{type:"application/json"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="save.json";
-  a.click();
+// BUY FUNCTIONS
+function buyClick(){let u=clickUpgrades[clickIndex];if(score>=u.cost){score-=u.cost;perClick+=u.value;clickIndex++;u.cost*=1.25+(clickIndex*0.02);update();}else showPopup("❌ Need: "+formatNumber(u.cost));}
+function buyAuto(){let u=autoUpgrades[autoIndex];if(score>=u.cost){score-=u.cost;perSecond+=u.value;autoIndex++;u.cost*=1.25+(autoIndex*0.02);update();}else showPopup("❌ Need: "+formatNumber(u.cost));}
+
+// RENDER ACHIEVEMENTS
+function renderAchievements(){
+  let list=document.getElementById("achievementsList");list.innerHTML="";
+  achievements.forEach(a=>{let li=document.createElement("li");li.innerText=(a==="fast")?"Fast Clicker ⚡":formatNumber(a)+" clicks";list.appendChild(li);});
 }
 
-function uploadSave(e){
-  const file=e.target.files[0];
-  const reader=new FileReader();
-  reader.onload=x=>{
-    localStorage.setItem("game",x.target.result);
-    load();
-  };
-  reader.readAsText(file);
-}
+// SAVE / LOAD
+function save(){localStorage.setItem("game",JSON.stringify({score,perClick,perSecond,totalClicks,achievements,clickIndex,autoIndex,prestige,leaderboard}));}
+function load(){let d=JSON.parse(localStorage.getItem("game"));if(d){score=d.score;perClick=d.perClick;perSecond=d.perSecond;totalClicks=d.totalClicks;achievements=d.achievements||[];clickIndex=d.clickIndex||0;autoIndex=d.autoIndex||0;prestige=d.prestige||0;leaderboard=d.leaderboard||[];}update();}
+setInterval(save,5000); load();
 
-// ===== OFFLINE =====
-if('serviceWorker' in navigator){
-  const code=`self.addEventListener("fetch",e=>{});`;
-  navigator.serviceWorker.register(URL.createObjectURL(new Blob([code])));
-}
+// SETTINGS
+function showSettings(){document.getElementById("gamePage").style.display="none";document.getElementById("settingsPage").style.display="block";}
+function showGame(){document.getElementById("settingsPage").style.display="none";document.getElementById("gamePage").style.display="block";}
+function resetGame(){if(confirm("Reset progress?")){leaderboard.push(score);leaderboard.sort((a,b)=>b-a);leaderboard=leaderboard.slice(0,5);localStorage.setItem("leaderboard",JSON.stringify(leaderboard));score=0;perClick=1;perSecond=0;totalClicks=0;achievements=[];clickIndex=0;autoIndex=0;save();update();}}
+function downloadSave(){const blob=new Blob([localStorage.getItem("game")],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="save.json";a.click();}
+function uploadSave(e){const file=e.target.files[0];const reader=new FileReader();reader.onload=x=>{localStorage.setItem("game",x.target.result);load();};reader.readAsText(file);}
 
-// ===== MANIFEST =====
-const manifest={name:"Clicker",short_name:"Clicker",start_url:"./",display:"standalone"};
-const link=document.createElement('link');
-link.rel='manifest';
-link.href=URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/json'}));
-document.head.appendChild(link);
+// PRESTIGE
+function prestigeReset(){if(score<1e6){showPopup("Need 1M clicks to prestige!");return;}if(confirm("Prestige and gain permanent boost?")){prestige++;score=0;perClick=1+prestige;perSecond=0;totalClicks=0;clickIndex=0;autoIndex=0;showPopup("Prestige Level "+prestige+"!");update();}}
 
+// AUTO INCOME
+setInterval(()=>{score+=perSecond;updateStatsOnly();},1000);
 </script>
-
 </body>
 </html>
