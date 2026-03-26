@@ -28,6 +28,12 @@ button:hover { background:#0056b3; }
 
 #message { color:red; height:20px; }
 
+/* ===== STATS BAR ===== */
+.stats {
+  margin:10px;
+  font-size:14px;
+}
+
 /* ===== WIDGET MODE ===== */
 .widget-mode #appContainer {
   position: fixed;
@@ -53,6 +59,12 @@ button:hover { background:#0056b3; }
 <button onclick="showSettings()">Settings</button>
 
 <p>Score: <span id="score">0</span></p>
+
+<div class="stats">
+  🖱 Per Click: <span id="perClickDisplay">1</span><br>
+  ⚡ Per Second: <span id="perSecondDisplay">0</span>
+</div>
+
 <p id="message"></p>
 
 <button onclick="clickScore()">Click</button>
@@ -91,22 +103,18 @@ button:hover { background:#0056b3; }
 <script>
 // ===== INSTALL SYSTEM =====
 let deferredPrompt;
-
 window.addEventListener('beforeinstallprompt', (e)=>{
   e.preventDefault();
   deferredPrompt = e;
 });
-
 function installApp(){
   if(deferredPrompt){
     deferredPrompt.prompt();
     deferredPrompt.userChoice.then(()=>{ deferredPrompt=null; });
-  } else {
-    alert("Install not available");
-  }
+  } else alert("Install not available");
 }
 
-// ===== DETECT WIDGET MODE =====
+// ===== WIDGET MODE =====
 if(window.matchMedia('(display-mode: standalone)').matches){
   document.body.classList.add("widget-mode");
 }
@@ -130,7 +138,7 @@ function showMessage(text){
 }
 
 // ===== UPGRADES =====
-const upgradeValues=[1.5,2,2.5,3,4,6,10,20,40,50,100,200,500,1e3,1e4,1e6,1e9,1e12,1e15,1e18,1e21];
+const upgradeValues=[1.5,2,2.5,3,4,6,10,20,40,50,100,200,500,1e3,1e4,1e6,1e9,1e12,1e15];
 
 let clickUpgrades=[], autoUpgrades=[];
 upgradeValues.forEach(v=>{
@@ -214,6 +222,8 @@ function checkAchievements(){
 // ===== UPDATE =====
 function update(){
   document.getElementById("score").innerText=formatNumber(score);
+  document.getElementById("perClickDisplay").innerText=formatNumber(perClick);
+  document.getElementById("perSecondDisplay").innerText=formatNumber(perSecond);
 
   let list=document.getElementById("achievementsList");
   list.innerHTML="";
@@ -274,13 +284,13 @@ function uploadSave(e){
   reader.readAsText(file);
 }
 
-// ===== OFFLINE (INLINE SW) =====
+// ===== OFFLINE =====
 if('serviceWorker' in navigator){
   const code=`self.addEventListener("fetch",e=>{});`;
   navigator.serviceWorker.register(URL.createObjectURL(new Blob([code])));
 }
 
-// ===== INLINE MANIFEST =====
+// ===== MANIFEST =====
 const manifest={name:"Clicker",short_name:"Clicker",start_url:"./",display:"standalone"};
 const link=document.createElement('link');
 link.rel='manifest';
