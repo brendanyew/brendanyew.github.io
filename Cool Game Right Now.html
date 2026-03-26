@@ -36,8 +36,8 @@ Prestige Level: <span id="prestigeDisplay">0</span>
 
 <button id="clickBtn" onclick="clickScore()">Click</button>
 
+<!-- GAME PAGE -->
 <div id="gamePage">
-
 <div class="box">
 <h2>Per Click Upgrades</h2>
 <div id="clickUpgrades"></div>
@@ -63,16 +63,24 @@ Prestige Level: <span id="prestigeDisplay">0</span>
 <h2>Leaderboard</h2>
 <ol id="leaderboard"></ol>
 </div>
-
 </div>
 
+<!-- SETTINGS PAGE -->
 <div id="settingsPage" style="display:none;">
 <h2>Settings</h2>
 <button onclick="installApp()">Install Widget Version</button><br>
 <button onclick="resetGame()">Reset Game</button><br>
 <button onclick="prestigeReset()">Prestige (Rebirth)</button><br>
 <button onclick="downloadSave()">Download Save</button><br>
-<input type="file" onchange="uploadSave(event)">
+<input type="file" onchange="uploadSave(event)"><br><br>
+<button onclick="showCredits()">Credits</button>
+</div>
+
+<!-- CREDITS PAGE -->
+<div id="creditsPage" style="display:none;">
+<h2>Credits</h2>
+<p>Made by Brendan Yew and ChatGPT</p>
+<button onclick="backFromCredits()">Back</button>
 </div>
 
 <div id="popupContainer"></div>
@@ -105,6 +113,30 @@ upgradeValues.forEach(v=>{
 // SOUND
 const clickSound = new Audio("https://www.soundjay.com/buttons/sounds/button-16.mp3");
 
+// ACHIEVEMENTS
+function showPopup(text){let div=document.createElement("div");div.className="popup";div.innerText=text;document.getElementById("popupContainer").appendChild(div);setTimeout(()=>div.remove(),2000);}
+const milestones=[100,200,400,800,1000,5000,10000,100000,1e6,1e9,1e12];
+function checkAchievements(triggerPopup=true){
+  milestones.forEach(m=>{
+    if(totalClicks>=m && !achievements.includes(m)){
+      achievements.push(m);
+      if(triggerPopup) showPopup(formatNumber(m)+" clicks!");
+    }
+  });
+}
+
+// CLICK ANIMATION
+function spawnClickText(xOffset=0){
+  let el=document.createElement("div");el.innerText="+"+formatNumber(perClick);el.style.position="absolute";
+  let rect=document.getElementById("clickBtn").getBoundingClientRect();
+  el.style.left=(rect.left + xOffset) + "px";el.style.top=rect.top+"px";el.style.color="#00ffcc";el.style.opacity=1;
+  document.body.appendChild(el);
+  let y=0;let anim=setInterval(()=>{y+=2;el.style.top=(el.offsetTop-2)+"px";el.style.opacity-=0.05;if(el.style.opacity<=0){clearInterval(anim);el.remove();}},16);
+}
+
+// CLICK SCORE
+function clickScore(){score+=perClick;totalClicks++;spawnClickText();clickSound.currentTime=0;clickSound.play();checkAchievements();updateStatsOnly();}
+
 // UPDATE FUNCTIONS
 function updateStatsOnly(){
   document.getElementById("score").innerText=formatNumber(score);
@@ -123,38 +155,8 @@ function updateProgress(){
   document.getElementById("progressText").innerText=`Progress: ${percent.toFixed(1)}% (Next cost: ${formatNumber(target)})`;
 }
 function updateLeaderboard(){
-  let list=document.getElementById("leaderboard");
-  list.innerHTML="";
+  let list=document.getElementById("leaderboard");list.innerHTML="";
   leaderboard.forEach((s,i)=>{let li=document.createElement("li");li.innerText="#" + (i+1) + " - " + formatNumber(s);list.appendChild(li);});
-}
-
-// ACHIEVEMENTS
-function showPopup(text){let div=document.createElement("div");div.className="popup";div.innerText=text;document.getElementById("popupContainer").appendChild(div);setTimeout(()=>div.remove(),2000);}
-const milestones=[100,200,400,800,1000,5000,10000,100000,1e6,1e9,1e12];
-function checkAchievements(triggerPopup=true){
-  milestones.forEach(m=>{
-    if(totalClicks>=m && !achievements.includes(m)){
-      achievements.push(m);
-      if(triggerPopup) showPopup(formatNumber(m)+" clicks!");
-    }
-  });
-}
-
-// CLICK ANIMATION
-function spawnClickText(){
-  let el=document.createElement("div");el.innerText="+"+formatNumber(perClick);el.style.position="absolute";
-  let rect=document.getElementById("clickBtn").getBoundingClientRect();
-  el.style.left=rect.left+"px";el.style.top=rect.top+"px";el.style.color="#00ffcc";el.style.opacity=1;
-  document.body.appendChild(el);
-  let y=0;let anim=setInterval(()=>{y+=2;el.style.top=(el.offsetTop-2)+"px";el.style.opacity-=0.05;if(el.style.opacity<=0){clearInterval(anim);el.remove();}},16);
-}
-
-// CLICK SCORE
-function clickScore(){
-  score+=perClick;totalClicks++;
-  spawnClickText();clickSound.currentTime=0;clickSound.play();
-  checkAchievements();
-  updateStatsOnly();
 }
 
 // RENDER UPGRADES
@@ -179,13 +181,10 @@ function renderUpgrades(){
 
 // BUY FUNCTIONS
 function buyClick(){let u=clickUpgrades[clickIndex];if(score>=u.cost){score-=u.cost;perClick+=u.value;clickIndex++;u.cost*=1.25+(clickIndex*0.02);update();}else showPopup("❌ Need: "+formatNumber(u.cost));}
-function buyAuto(){let u=autoUpgrades[autoIndex];if(score>=u.cost){score-=u.cost;perSecond+=u.value;autoIndex++;u.cost*=1.25+(autoIndex*0.02);update();}else showPopup("❌ Need: "+formatNumber(u.cost));}
+function buyAuto(){let u=autoUpgrades[autoIndex];if(score>=u.cost){score-=u.cost;perSecond+=u.value;autoIndex++;u.cost*=1.25+(autoIndex*0.02);spawnClickText();clickSound.currentTime=0;clickSound.play();showPopup(`+${formatNumber(u.value)} / sec!`);update();}else showPopup("❌ Need: "+formatNumber(u.cost));}
 
 // RENDER ACHIEVEMENTS
-function renderAchievements(){
-  let list=document.getElementById("achievementsList");list.innerHTML="";
-  achievements.forEach(a=>{let li=document.createElement("li");li.innerText=(a==="fast")?"Fast Clicker ⚡":formatNumber(a)+" clicks";list.appendChild(li);});
-}
+function renderAchievements(){let list=document.getElementById("achievementsList");list.innerHTML="";achievements.forEach(a=>{let li=document.createElement("li");li.innerText=(a==="fast")?"Fast Clicker ⚡":formatNumber(a)+" clicks";list.appendChild(li);});}
 
 // SAVE / LOAD
 function save(){localStorage.setItem("game",JSON.stringify({score,perClick,perSecond,totalClicks,achievements,clickIndex,autoIndex,prestige,leaderboard}));}
@@ -199,11 +198,23 @@ function resetGame(){if(confirm("Reset progress?")){leaderboard.push(score);lead
 function downloadSave(){const blob=new Blob([localStorage.getItem("game")],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="save.json";a.click();}
 function uploadSave(e){const file=e.target.files[0];const reader=new FileReader();reader.onload=x=>{localStorage.setItem("game",x.target.result);load();};reader.readAsText(file);}
 
+// CREDITS
+function showCredits(){document.getElementById("settingsPage").style.display="none";document.getElementById("creditsPage").style.display="block";}
+function backFromCredits(){document.getElementById("creditsPage").style.display="none";document.getElementById("settingsPage").style.display="block";}
+
 // PRESTIGE
 function prestigeReset(){if(score<1e6){showPopup("Need 1M clicks to prestige!");return;}if(confirm("Prestige and gain permanent boost?")){prestige++;score=0;perClick=1+prestige;perSecond=0;totalClicks=0;clickIndex=0;autoIndex=0;showPopup("Prestige Level "+prestige+"!");update();}}
 
-// AUTO INCOME
-setInterval(()=>{score+=perSecond;updateStatsOnly();},1000);
+// GAME LOOP (smooth per second)
+let last=Date.now();
+function gameLoop(){
+  let now=Date.now();
+  let delta=(now-last)/1000;last=now;
+  score += perSecond*delta;
+  updateStatsOnly();
+  requestAnimationFrame(gameLoop);
+}
+requestAnimationFrame(gameLoop);
 </script>
 </body>
 </html>
