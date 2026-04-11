@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Stopwatch + Timer</title>
+
+  <style>
+    body {
+      background-color: #0b1f3a;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 60px;
+    }
+
+    .display {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 70px;
+    }
+
+    .num {
+      font-size: 40px;
+      font-weight: bold;
+      transition: color 0.2s;
+    }
+
+    .label {
+      font-size: 14px;
+      opacity: 0.7;
+      margin-top: 5px;
+    }
+
+    .red {
+      color: red !important;
+    }
+
+    button {
+      background-color: #1e90ff;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      margin: 5px;
+      font-size: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0f78d1;
+    }
+
+    input {
+      padding: 8px;
+      width: 70px;
+      margin: 5px;
+      border-radius: 6px;
+      border: none;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>Stopwatch + Timer</h2>
+
+  <!-- DISPLAY -->
+  <div class="display">
+    <div class="unit">
+      <div class="num" id="days">00</div>
+      <div class="label">Days</div>
+    </div>
+
+    <div class="unit">
+      <div class="num" id="hours">00</div>
+      <div class="label">Hours</div>
+    </div>
+
+    <div class="unit">
+      <div class="num" id="minutes">00</div>
+      <div class="label">Minutes</div>
+    </div>
+
+    <div class="unit">
+      <div class="num" id="seconds">00</div>
+      <div class="label">Seconds</div>
+    </div>
+
+    <div class="unit">
+      <div class="num" id="ms">000</div>
+      <div class="label">Milliseconds</div>
+    </div>
+  </div>
+
+  <!-- INPUT -->
+  <input id="h" placeholder="HH">
+  <input id="m" placeholder="MM">
+  <input id="s" placeholder="SS">
+
+  <br><br>
+
+  <button onclick="start()">Start</button>
+  <button onclick="pause()">Pause</button>
+  <button onclick="reset()">Reset</button>
+
+  <script>
+    let startTime = null;
+    let elapsed = 0;
+    let duration = 0;
+    let running = false;
+    let interval = null;
+    let beepInterval = null;
+
+    // 🔊 beep
+    function beep() {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.value = 900;
+      gain.gain.value = 0.2;
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.2);
+    }
+
+    function format(ms) {
+      let negative = ms < 0;
+      ms = Math.abs(ms);
+
+      let milliseconds = ms % 1000;
+      let totalSeconds = Math.floor(ms / 1000);
+
+      let seconds = totalSeconds % 60;
+      let minutes = Math.floor(totalSeconds / 60) % 60;
+      let hours = Math.floor(totalSeconds / 3600) % 24;
+      let days = Math.floor(totalSeconds / 86400);
+
+      return {
+        negative,
+        days,
+        hours,
+        minutes,
+        seconds,
+        milliseconds
+      };
+    }
+
+    function setRed(isRed) {
+      document.querySelectorAll(".num").forEach(el => {
+        if (isRed) el.classList.add("red");
+        else el.classList.remove("red");
+      });
+    }
+
+    function render(t) {
+      document.getElementById("days").textContent =
+        (t.negative ? "-" : "") + String(t.days).padStart(2, "0");
+
+      document.getElementById("hours").textContent =
+        String(t.hours).padStart(2, "0");
+
+      document.getElementById("minutes").textContent =
+        String(t.minutes).padStart(2, "0");
+
+      document.getElementById("seconds").textContent =
+        String(t.seconds).padStart(2, "0");
+
+      document.getElementById("ms").textContent =
+        String(t.milliseconds).padStart(3, "0");
+
+      // 🔴 red at <= 0.999s OR negative
+      if (
+        t.negative ||
+        (t.days === 0 &&
+          t.hours === 0 &&
+          t.minutes === 0 &&
+          t.seconds === 0 &&
+          t.milliseconds <= 999)
+      ) {
+        setRed(true);
+      } else {
+        setRed(false);
+      }
+    }
+
+    function getTime() {
+      return duration - (elapsed + (running ? Date.now() - startTime : 0));
+    }
+
+    function update() {
+      let time = getTime();
+      let t = format(time);
+
+      render(t);
+
+      // 🔊 continuous beep after 0
+      if (time <= 0 && running) {
+        if (!beepInterval) {
+          beep();
+          beepInterval = setInterval(beep, 1000);
+        }
+      } else {
+        clearInterval(beepInterval);
+        beepInterval = null;
+      }
+    }
+
+    function start() {
+      if (running) return;
+
+      if (elapsed === 0) {
+        let h = parseInt(document.getElementById("h").value) || 0;
+        let m = parseInt(document.getElementById("m").value) || 0;
+        let s = parseInt(document.getElementById("s").value) || 0;
+
+        duration = (h * 3600 + m * 60 + s) * 1000;
+      }
+
+      running = true;
+      startTime = Date.now();
+
+      interval = setInterval(update, 10);
+    }
+
+    function pause() {
+      if (!running) return;
+
+      elapsed += Date.now() - startTime;
+      running = false;
+
+      clearInterval(interval);
+      clearInterval(beepInterval);
+
+      beepInterval = null;
+    }
+
+    function reset() {
+      clearInterval(interval);
+      clearInterval(beepInterval);
+
+      startTime = null;
+      elapsed = 0;
+      duration = 0;
+      running = false;
+      beepInterval = null;
+
+      setRed(false);
+
+      render({
+        negative: false,
+        days:0,
+        hours:0,
+        minutes:0,
+        seconds:0,
+        milliseconds:0
+      });
+    }
+
+    render({
+      negative: false,
+      days:0,
+      hours:0,
+      minutes:0,
+      seconds:0,
+      milliseconds:0
+    });
+  </script>
+
+</body>
+</html>
