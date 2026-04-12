@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Advanced Scientific Calculator</title>
+  <title>CASIO fx-991EX FINAL</title>
 
   <style>
     body{
@@ -12,6 +12,18 @@
       align-items:center;
       height:100vh;
       font-family:Arial;
+    }
+
+    /* 🔥 NEW WRAPPER */
+    .container{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+    }
+
+    .logo img{
+      max-width:200px;
     }
 
     .calc{
@@ -50,7 +62,6 @@
     .shift{background:#d97b00;}
     .alpha{background:#2e8b57;}
 
-    /* FRACTION UI */
     .frac{
       display:inline-block;
       text-align:center;
@@ -74,52 +85,64 @@
 </head>
 
 <body>
-<div style="width:100%;"><a href="index.html"><img src="Logo.png" alt="Brendan's Website"></a></div>
-<div class="calc">
 
-  <div id="screen"></div>
+<div class="container">
 
-  <div class="grid">
+  <!-- 🔥 LOGO NOW ON TOP -->
+  <div class="logo">
+    <a href="index.html">
+      <img src="Logo.png" alt="Brendan's Website">
+    </a>
+  </div>
 
-    <button onclick="toggleShift()" class="shift">SHIFT</button>
-    <button onclick="toggleAlpha()" class="alpha">ALPHA</button>
+  <!-- CALCULATOR -->
+  <div class="calc">
 
-    <button onclick="clearAll()">AC</button>
-    <button onclick="del()">DEL</button>
-    <button onclick="input('/')">÷</button>
+    <div id="screen"></div>
 
-    <button onclick="func('sin','asin')">sin</button>
-    <button onclick="func('cos','acos')">cos</button>
-    <button onclick="func('tan','atan')">tan</button>
+    <div class="grid">
 
-    <button onclick="input('(')">(</button>
-    <button onclick="input(')')">)</button>
+      <button onclick="toggleShift()" class="shift">SHIFT</button>
+      <button onclick="toggleAlpha()" class="alpha">ALPHA</button>
 
-    <button onclick="input('log')">log</button>
-    <button onclick="input('ln')">ln</button>
-    <button onclick="input('^')">^</button>
+      <button onclick="clearAll()">AC</button>
+      <button onclick="del()">DEL</button>
+      <button onclick="input('/')">÷</button>
 
-    <button id="fracBtn" onclick="fraction()">a/b</button>
+      <button onclick="func('sin','asin')">sin</button>
+      <button onclick="func('cos','acos')">cos</button>
+      <button onclick="func('tan','atan')">tan</button>
 
-    <button onclick="input('*')">×</button>
+      <button onclick="input('(')">(</button>
+      <button onclick="input(')')">)</button>
 
-    <button onclick="input(7)">7</button>
-    <button onclick="input(8)">8</button>
-    <button onclick="input(9)">9</button>
+      <button onclick="input('log')">log</button>
+      <button onclick="input('ln')">ln</button>
+      <button onclick="input('^')">^</button>
 
-    <button onclick="input('-')">−</button>
+      <button id="fracBtn" onclick="fraction()">a/b</button>
 
-    <button onclick="input(4)">4</button>
-    <button onclick="input(5)">5</button>
-    <button onclick="input(6)">6</button>
+      <button onclick="input('*')">×</button>
 
-    <button onclick="input('+')">+</button>
+      <button onclick="input(7)">7</button>
+      <button onclick="input(8)">8</button>
+      <button onclick="input(9)">9</button>
 
-    <button onclick="alphaKey(1,'x')">1</button>
-    <button onclick="alphaKey(2,'y')">2</button>
-    <button onclick="alphaKey(3,'z')">3</button>
+      <button onclick="input('-')">−</button>
 
-    <button onclick="solve()">=</button>
+      <button onclick="input(4)">4</button>
+      <button onclick="input(5)">5</button>
+      <button onclick="input(6)">6</button>
+
+      <button onclick="input('+')">+</button>
+
+      <button onclick="alphaKey(1,'x')">1</button>
+      <button onclick="alphaKey(2,'y')">2</button>
+      <button onclick="alphaKey(3,'z')">3</button>
+
+      <button onclick="solve()">=</button>
+
+    </div>
 
   </div>
 </div>
@@ -138,7 +161,6 @@ let state = {
 
 function toggleShift(){
   state.shift = !state.shift;
-
   document.getElementById("fracBtn").textContent =
     state.shift ? "w a/b" : "a/b";
 }
@@ -249,15 +271,12 @@ function render(){
     else if(t.type==="mix"){
       out += `
         <span style="display:inline-flex;align-items:center;gap:4px;">
-          
           <div class="box">${t.w||0}</div>
-
           <span class="frac">
             <div class="box">${t.n||0}</div>
             <div class="line"></div>
             <div class="box">${t.d||0}</div>
           </span>
-
         </span>
       `;
     }
@@ -269,44 +288,23 @@ function render(){
 /* ================= SOLVE ================= */
 
 function solve(){
-
   try{
-    let expr = buildExpression(state.tokens);
-    let result = eval(expr);
-    document.getElementById("screen").innerHTML = result;
+    let expr = state.tokens.map(t=>{
+      if(typeof t==="number") return t;
+      if(typeof t==="string"){
+        if(t==="×") return "*";
+        if(t==="−") return "-";
+        return t;
+      }
+      if(t.type==="var") return 0;
+      if(t.type==="frac") return (t.n||0)/(t.d||1);
+      if(t.type==="mix") return (t.w||0)+(t.n||0)/(t.d||1);
+    }).join("");
+
+    document.getElementById("screen").innerHTML = eval(expr);
   }catch{
-    document.getElementById("screen").innerHTML = "Error";
+    document.getElementById("screen").innerHTML="Error";
   }
-}
-
-function buildExpression(tokens){
-
-  let out="";
-
-  for(let t of tokens){
-
-    if(typeof t==="number") out+=t;
-
-    else if(typeof t==="string"){
-      if(t==="×") out+="*";
-      else if(t==="−") out+="-";
-      else out+=t;
-    }
-
-    else if(t.type==="var"){
-      out+=0;
-    }
-
-    else if(t.type==="frac"){
-      out += (Number(t.n||0)/Number(t.d||1));
-    }
-
-    else if(t.type==="mix"){
-      out += (Number(t.w||0)+(Number(t.n||0)/Number(t.d||1)));
-    }
-  }
-
-  return out;
 }
 
 render();
