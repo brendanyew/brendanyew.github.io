@@ -29,7 +29,6 @@
     .num {
       font-size: 40px;
       font-weight: bold;
-      transition: color 0.2s;
     }
 
     .label {
@@ -72,50 +71,41 @@
 
   <h2>Stopwatch + Timer</h2>
 
+  <!-- MODE -->
+  <button onclick="setMode('stopwatch')">Stopwatch</button>
+  <button onclick="setMode('timer')">Timer</button>
+
   <!-- DISPLAY -->
   <div class="display">
-    <div class="unit">
-      <div class="num" id="days">00</div>
-      <div class="label">Days</div>
-    </div>
-
-    <div class="unit">
-      <div class="num" id="hours">00</div>
-      <div class="label">Hours</div>
-    </div>
-
-    <div class="unit">
-      <div class="num" id="minutes">00</div>
-      <div class="label">Minutes</div>
-    </div>
-
-    <div class="unit">
-      <div class="num" id="seconds">00</div>
-      <div class="label">Seconds</div>
-    </div>
-
-    <div class="unit">
-      <div class="num" id="ms">000</div>
-      <div class="label">Milliseconds</div>
-    </div>
+    <div class="unit"><div class="num" id="days">00</div><div class="label">Days</div></div>
+    <div class="unit"><div class="num" id="hours">00</div><div class="label">Hours</div></div>
+    <div class="unit"><div class="num" id="minutes">00</div><div class="label">Minutes</div></div>
+    <div class="unit"><div class="num" id="seconds">00</div><div class="label">Seconds</div></div>
+    <div class="unit"><div class="num" id="ms">000</div><div class="label">Milliseconds</div></div>
   </div>
 
-  <!-- INPUT -->
-  <input id="h" placeholder="HH">
-  <input id="m" placeholder="MM">
-  <input id="s" placeholder="SS">
+  <!-- INPUTS -->
+  <div id="inputs">
+    <input id="h" placeholder="HH">
+    <input id="m" placeholder="MM">
+    <input id="s" placeholder="SS">
+  </div>
 
-  <br><br>
+  <br>
 
+  <!-- CONTROLS -->
   <button onclick="start()">Start</button>
   <button onclick="pause()">Pause</button>
   <button onclick="reset()">Reset</button>
 
   <script>
+    let mode = "stopwatch";
+
     let startTime = null;
     let elapsed = 0;
     let duration = 0;
     let running = false;
+
     let interval = null;
     let beepInterval = null;
 
@@ -148,20 +138,12 @@
       let hours = Math.floor(totalSeconds / 3600) % 24;
       let days = Math.floor(totalSeconds / 86400);
 
-      return {
-        negative,
-        days,
-        hours,
-        minutes,
-        seconds,
-        milliseconds
-      };
+      return { negative, days, hours, minutes, seconds, milliseconds };
     }
 
     function setRed(isRed) {
       document.querySelectorAll(".num").forEach(el => {
-        if (isRed) el.classList.add("red");
-        else el.classList.remove("red");
+        el.classList.toggle("red", isRed);
       });
     }
 
@@ -181,14 +163,14 @@
       document.getElementById("ms").textContent =
         String(t.milliseconds).padStart(3, "0");
 
-      // 🔴 red at <= 0.999s OR negative
       if (
-        t.negative ||
-        (t.days === 0 &&
-          t.hours === 0 &&
-          t.minutes === 0 &&
-          t.seconds === 0 &&
-          t.milliseconds <= 999)
+        mode === "timer" &&
+        (t.negative ||
+          (t.days === 0 &&
+            t.hours === 0 &&
+            t.minutes === 0 &&
+            t.seconds === 0 &&
+            t.milliseconds <= 999))
       ) {
         setRed(true);
       } else {
@@ -197,7 +179,11 @@
     }
 
     function getTime() {
-      return duration - (elapsed + (running ? Date.now() - startTime : 0));
+      if (mode === "stopwatch") {
+        return elapsed + (running ? Date.now() - startTime : 0);
+      } else {
+        return duration - (elapsed + (running ? Date.now() - startTime : 0));
+      }
     }
 
     function update() {
@@ -206,8 +192,8 @@
 
       render(t);
 
-      // 🔊 continuous beep after 0
-      if (time <= 0 && running) {
+      // 🔊 only for timer
+      if (mode === "timer" && time <= 0 && running) {
         if (!beepInterval) {
           beep();
           beepInterval = setInterval(beep, 1000);
@@ -221,7 +207,7 @@
     function start() {
       if (running) return;
 
-      if (elapsed === 0) {
+      if (mode === "timer" && elapsed === 0) {
         let h = parseInt(document.getElementById("h").value) || 0;
         let m = parseInt(document.getElementById("m").value) || 0;
         let s = parseInt(document.getElementById("s").value) || 0;
@@ -243,7 +229,6 @@
 
       clearInterval(interval);
       clearInterval(beepInterval);
-
       beepInterval = null;
     }
 
@@ -261,22 +246,26 @@
 
       render({
         negative: false,
-        days:0,
-        hours:0,
-        minutes:0,
-        seconds:0,
-        milliseconds:0
+        days: 0,
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+        milliseconds: 0
       });
     }
 
-    render({
-      negative: false,
-      days:0,
-      hours:0,
-      minutes:0,
-      seconds:0,
-      milliseconds:0
-    });
+    function setMode(m) {
+      pause();
+      mode = m;
+
+      document.getElementById("inputs").style.display =
+        m === "timer" ? "block" : "none";
+
+      reset();
+    }
+
+    // init
+    setMode("stopwatch");
   </script>
 
 </body>
