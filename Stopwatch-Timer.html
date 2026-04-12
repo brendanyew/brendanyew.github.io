@@ -85,7 +85,7 @@
   </div>
 
   <!-- INPUTS -->
-  <div id="inputs">
+  <div id="inputs" style="display:none;">
     <input id="h" placeholder="HH">
     <input id="m" placeholder="MM">
     <input id="s" placeholder="SS">
@@ -192,7 +192,6 @@
 
       render(t);
 
-      // 🔊 only for timer
       if (mode === "timer" && time <= 0 && running) {
         if (!beepInterval) {
           beep();
@@ -255,17 +254,45 @@
     }
 
     function setMode(m) {
-      pause();
+      // hard reset everything
+      clearInterval(interval);
+      clearInterval(beepInterval);
+
+      interval = null;
+      beepInterval = null;
+
+      running = false;
+      startTime = null;
+      elapsed = 0;
+      duration = 0;
+
       mode = m;
 
       document.getElementById("inputs").style.display =
         m === "timer" ? "block" : "none";
 
-      reset();
+      render({
+        negative: false,
+        days: 0,
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+        milliseconds: 0
+      });
     }
 
-    // init
-    setMode("stopwatch");
+    // INIT (clean start in stopwatch mode)
+    mode = "stopwatch";
+    document.getElementById("inputs").style.display = "none";
+
+    render({
+      negative: false,
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      milliseconds: 0
+    });
   </script>
 
 </body>
