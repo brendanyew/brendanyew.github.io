@@ -118,7 +118,7 @@
       <button onclick="input('ln')" id="b7">ln</button>
       <button onclick="input('^')" id="b8">^</button>
 
-      <button onclick="fraction()" id="fracBtn">a/b</button>
+      <button id="fracBtn" onclick="fraction()">a/b</button>
 
       <button onclick="input('*')" id="b9">×</button>
 
@@ -154,19 +154,25 @@ let state = {
   tokens:[]
 };
 
-/* ================= SHIFT / ALPHA FIX ================= */
+/* ================= SHIFT / ALPHA ================= */
 
 function toggleShift(){
   state.shift = !state.shift;
   updateKeys();
+
+  document.getElementById("fracBtn").textContent =
+    state.shift ? "w a/b" : "a/b";
 }
 
 function toggleAlpha(){
   state.alpha = !state.alpha;
   updateKeys();
+
+  // ALPHA hides fraction label
+  document.getElementById("fracBtn").textContent = "";
 }
 
-/* ================= KEY LABEL SYSTEM (FIXED PROPERLY) ================= */
+/* ================= KEY SYSTEM ================= */
 
 function updateKeys(){
 
@@ -240,7 +246,7 @@ function input(v){
   render();
 }
 
-/* ================= OTHER FEATURES (UNCHANGED) ================= */
+/* ================= OTHER ================= */
 
 function alphaKey(n,l){
   state.tokens.push(state.alpha ? {type:"var", value:l} : n);
@@ -308,6 +314,8 @@ function render(){
 
   document.getElementById("screen").innerHTML = out;
 }
+
+/* ================= SOLVE ================= */
 
 function solve(){
   try{
