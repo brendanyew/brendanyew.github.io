@@ -22,16 +22,14 @@
     }
 
     #screen{
-      min-height:140px;
+      min-height:120px;
       background:#021024;
       color:white;
       padding:10px;
       border-radius:10px;
       border:2px solid #2d6cdf;
-      font-size:14px;
-      white-space:pre;
       font-family:monospace;
-      line-height:1.2;
+      white-space:pre;
     }
 
     .grid{
@@ -47,39 +45,17 @@
       border-radius:8px;
       background:#1e4fa3;
       color:white;
-      font-size:11px;
       cursor:pointer;
-      min-height:36px;
     }
 
     .shift{background:#d97b00;}
     .alpha{background:#2e8b57;}
-
-    .modebar{
-      display:flex;
-      gap:5px;
-      margin-bottom:8px;
-    }
-
-    .modebar button{
-      flex:1;
-      background:#223a70;
-    }
-
-    .activeMode{background:#3a5fbf !important;}
   </style>
 </head>
 
 <body>
 
 <div class="calc">
-
-  <div class="modebar">
-    <button onclick="setMode('COMP')" id="COMPbtn">COMP</button>
-    <button onclick="setMode('EQ')" id="EQbtn">EQ</button>
-    <button onclick="setMode('STAT')" id="STATbtn">STAT</button>
-    <button onclick="setMode('MAT')" id="MATbtn">MAT</button>
-  </div>
 
   <div id="screen"></div>
 
@@ -92,36 +68,36 @@
     <button onclick="del()">DEL</button>
     <button onclick="input('/')">÷</button>
 
-    <button onclick="func('sin','asin')">sin</button>
-    <button onclick="func('cos','acos')">cos</button>
-    <button onclick="func('tan','atan')">tan</button>
+    <button id="b1" onclick="func('sin','asin')">sin</button>
+    <button id="b2" onclick="func('cos','acos')">cos</button>
+    <button id="b3" onclick="func('tan','atan')">tan</button>
 
-    <button onclick="input('(')">(</button>
-    <button onclick="input(')')">)</button>
+    <button id="b4" onclick="input('(')">(</button>
+    <button id="b5" onclick="input(')')">)</button>
 
-    <button onclick="input('log')">log</button>
-    <button onclick="input('ln')">ln</button>
-    <button onclick="input('^')">^</button>
+    <button id="b6" onclick="input('log')">log</button>
+    <button id="b7" onclick="input('ln')">ln</button>
+    <button id="b8" onclick="input('^')">^</button>
 
-    <button onclick="input('*')">×</button>
+    <button id="b9" onclick="input('*')">×</button>
 
-    <button onclick="input(7)">7</button>
-    <button onclick="input(8)">8</button>
-    <button onclick="input(9)">9</button>
+    <button id="b11" onclick="input(7)">7</button>
+    <button id="b12" onclick="input(8)">8</button>
+    <button id="b13" onclick="input(9)">9</button>
 
-    <button onclick="input('-')">−</button>
+    <button id="b14" onclick="input('-')">−</button>
 
-    <button onclick="input(4)">4</button>
-    <button onclick="input(5)">5</button>
-    <button onclick="input(6)">6</button>
+    <button id="b16" onclick="input(4)">4</button>
+    <button id="b17" onclick="input(5)">5</button>
+    <button id="b18" onclick="input(6)">6</button>
 
-    <button onclick="input('+')">+</button>
+    <button id="b19" onclick="input('+')">+</button>
 
-    <button onclick="alphaKey(1,'x')">1</button>
-    <button onclick="alphaKey(2,'y')">2</button>
-    <button onclick="alphaKey(3,'z')">3</button>
+    <button id="b21" onclick="alphaKey(1,'x')">1</button>
+    <button id="b22" onclick="alphaKey(2,'y')">2</button>
+    <button id="b23" onclick="alphaKey(3,'z')">3</button>
 
-    <button onclick="solve()">=</button>
+    <button id="b24" onclick="solve()">=</button>
 
   </div>
 </div>
@@ -131,34 +107,18 @@
 /* ================= STATE ================= */
 
 let state = {
-  mode:"COMP",
   shift:false,
   alpha:false,
   tokens:[]
 };
 
-/* ================= MODE ================= */
-
-function setMode(m){
-  state.mode=m;
-
-  ["COMP","EQ","STAT","MAT"].forEach(id=>{
-    document.getElementById(id+"btn").classList.remove("activeMode");
-  });
-
-  document.getElementById(m+"btn").classList.add("activeMode");
-
-  render();
-}
-
 /* ================= INPUT ================= */
 
 function input(v){
-  state.tokens.push(v);
+  if(!isNaN(v)) state.tokens.push(Number(v));
+  else state.tokens.push(v);
   render();
 }
-
-/* ================= ALPHA ================= */
 
 function alphaKey(n,l){
   state.tokens.push(state.alpha ? {type:"var", value:l} : n);
@@ -167,14 +127,24 @@ function alphaKey(n,l){
 
 /* ================= SHIFT / ALPHA ================= */
 
-function toggleShift(){ state.shift=!state.shift; }
-function toggleAlpha(){ state.alpha=!state.alpha; }
+function toggleShift(){
+  state.shift = !state.shift;
+  state.alpha = false;
+  updateKeys();
+}
+
+function toggleAlpha(){
+  state.alpha = !state.alpha;
+  state.shift = false;
+  updateKeys();
+}
 
 /* ================= FUNCTIONS ================= */
 
 function func(n,s){
   state.tokens.push(state.shift ? s : n);
-  state.shift=false;
+  state.shift = false;
+  updateKeys();
 }
 
 /* ================= DELETE ================= */
@@ -185,20 +155,70 @@ function del(){
 }
 
 function clearAll(){
-  state.tokens=[];
+  state.tokens = [];
   render();
+}
+
+/* ================= KEY LABEL SYSTEM ================= */
+
+function updateKeys(){
+
+  const normal = {
+    b1:"sin", b2:"cos", b3:"tan",
+    b4:"(", b5:")",
+    b6:"log", b7:"ln",
+    b8:"^",
+    b9:"×",
+    b11:"7", b12:"8", b13:"9",
+    b14:"−",
+    b16:"4", b17:"5", b18:"6",
+    b19:"+",
+    b21:"1", b22:"2", b23:"3",
+    b24:"="
+  };
+
+  const shift = {
+    b1:"asin",
+    b2:"acos",
+    b3:"atan"
+  };
+
+  const alpha = {
+    b21:"x",
+    b22:"y",
+    b23:"z"
+  };
+
+  let active = {...normal};
+
+  if(state.shift){
+    for(let k in active){
+      active[k] = shift[k] || "";
+    }
+  }
+
+  if(state.alpha){
+    for(let k in active){
+      active[k] = alpha[k] || "";
+    }
+  }
+
+  for(let i=1;i<=24;i++){
+    let btn = document.getElementById("b"+i);
+    if(btn) btn.textContent = active["b"+i] || "";
+  }
 }
 
 /* ================= RENDER ================= */
 
 function render(){
-  document.getElementById("screen").innerHTML =
-    state.mode + " : " + state.tokens.map(t =>
+  document.getElementById("screen").textContent =
+    state.tokens.map(t =>
       typeof t==="object" ? t.value : t
     ).join(" ");
 }
 
-/* ================= FX-991EX PARSER ================= */
+/* ================= PARSER ================= */
 
 function solve(){
 
@@ -206,33 +226,30 @@ function solve(){
     const expr = buildExpression(state.tokens);
     const result = evaluateExpression(expr);
 
-    document.getElementById("screen").innerHTML =
-      state.mode + " : " + result;
+    document.getElementById("screen").textContent = result;
 
-  } catch(e){
-    document.getElementById("screen").innerHTML =
-      state.mode + " : Error";
+  } catch{
+    document.getElementById("screen").textContent = "Error";
   }
 }
 
 function buildExpression(tokens){
 
-  let out="";
+  let out = "";
 
   for(let t of tokens){
 
-    if(typeof t==="number"){
+    if(typeof t === "number"){
       out += t;
     }
 
-    else if(typeof t==="string"){
-
+    else if(typeof t === "string"){
       if(t==="×") out+="*";
       else if(t==="−") out+="-";
       else out+=t;
     }
 
-    else if(t?.type==="var"){
+    else if(t.type==="var"){
       out += 0;
     }
   }
@@ -243,8 +260,7 @@ function buildExpression(tokens){
 function evaluateExpression(expr){
 
   const tokens = expr.match(/(\d+\.?\d*|[+\-*/^()])/g);
-  const output=[];
-  const ops=[];
+  const output=[], ops=[];
   const prec={"+":1,"-":1,"*":2,"/":2,"^":3};
 
   for(let t of tokens){
@@ -291,7 +307,7 @@ function evaluateExpression(expr){
 }
 
 /* INIT */
-setMode("COMP");
+updateKeys();
 render();
 
 </script>
