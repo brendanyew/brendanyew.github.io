@@ -65,6 +65,7 @@
     .frac{
       display:inline-block;
       text-align:center;
+      margin:2px;
     }
 
     .box{
@@ -74,12 +75,17 @@
       font-size:12px;
       line-height:18px;
       margin:auto;
+      cursor:pointer;
     }
 
     .line{
       border-top:1px solid white;
       width:26px;
       margin:auto;
+    }
+
+    .active{
+      outline:2px solid yellow;
     }
   </style>
 </head>
@@ -151,7 +157,8 @@
 let state = {
   shift:false,
   alpha:false,
-  tokens:[]
+  tokens:[],
+  active:null
 };
 
 /* ================= SHIFT / ALPHA ================= */
@@ -159,7 +166,6 @@ let state = {
 function toggleShift(){
   state.shift = !state.shift;
   updateKeys();
-
   document.getElementById("fracBtn").textContent =
     state.shift ? "w a/b" : "a/b";
 }
@@ -167,86 +173,43 @@ function toggleShift(){
 function toggleAlpha(){
   state.alpha = !state.alpha;
   updateKeys();
-
-  // ALPHA hides fraction label
   document.getElementById("fracBtn").textContent = "";
-}
-
-/* ================= KEY SYSTEM ================= */
-
-function updateKeys(){
-
-  const normal = {
-    b1:"sin", b2:"cos", b3:"tan",
-    b4:"(", b5:")",
-    b6:"log", b7:"ln",
-    b8:"^",
-    b9:"×",
-    b11:"7", b12:"8", b13:"9",
-    b14:"−",
-    b16:"4", b17:"5", b18:"6",
-    b19:"+",
-    b21:"1", b22:"2", b23:"3",
-    b24:"="
-  };
-
-  const shift = {
-    b1:"asin",
-    b2:"acos",
-    b3:"atan"
-  };
-
-  const alpha = {
-    b21:"x",
-    b22:"y",
-    b23:"z"
-  };
-
-  for(let i=1;i<=24;i++){
-    let btn=document.getElementById("b"+i);
-    if(!btn) continue;
-
-    if(state.shift){
-      btn.textContent = shift["b"+i] || "";
-    }
-    else if(state.alpha){
-      btn.textContent = alpha["b"+i] || "";
-    }
-    else{
-      btn.textContent = normal["b"+i] || "";
-    }
-  }
 }
 
 /* ================= INPUT ================= */
 
 function input(v){
 
-  let t = state.tokens.at(-1);
+  let t = state.active;
 
-  if(t && typeof t==="object"){
+  if(t && t.type==="frac"){
+    if(t.cursor==="n") t.n += v;
+    else t.d += v;
+    render();
+    return;
+  }
 
-    if(t.type==="frac"){
-      if(t.cursor==="n") t.n += v;
-      else t.d += v;
-      render();
-      return;
-    }
-
-    if(t.type==="mix"){
-      if(t.cursor==="w") t.w += v;
-      else if(t.cursor==="n") t.n += v;
-      else t.d += v;
-      render();
-      return;
-    }
+  if(t && t.type==="mix"){
+    if(t.cursor==="w") t.w += v;
+    else if(t.cursor==="n") t.n += v;
+    else t.d += v;
+    render();
+    return;
   }
 
   state.tokens.push(v);
   render();
 }
 
-/* ================= OTHER ================= */
+/* ================= FRACTION EDITING FIX ================= */
+
+function setActive(obj, part){
+  state.active = obj;
+  obj.cursor = part;
+  render();
+}
+
+/* ================= KEYBOARD ================= */
 
 function alphaKey(n,l){
   state.tokens.push(state.alpha ? {type:"var", value:l} : n);
@@ -274,6 +237,8 @@ function fraction(){
 function del(){ state.tokens.pop(); render(); }
 function clearAll(){ state.tokens=[]; render(); }
 
+/* ================= RENDER ================= */
+
 function render(){
 
   let out="";
@@ -291,9 +256,15 @@ function render(){
     else if(t.type==="frac"){
       out += `
         <span class="frac">
-          <div class="box">${t.n||0}</div>
+          <div class="box ${t.cursor==='n'?'active':''}"
+               onclick="setActive(state.tokens[state.tokens.indexOf(t)],'n')">
+            ${t.n||0}
+          </div>
           <div class="line"></div>
-          <div class="box">${t.d||0}</div>
+          <div class="box ${t.cursor==='d'?'active':''}"
+               onclick="setActive(state.tokens[state.tokens.indexOf(t)],'d')">
+            ${t.d||0}
+          </div>
         </span>
       `;
     }
@@ -301,11 +272,21 @@ function render(){
     else if(t.type==="mix"){
       out += `
         <span style="display:inline-flex;align-items:center;gap:4px;">
-          <div class="box">${t.w||0}</div>
+          <div class="box ${t.cursor==='w'?'active':''}"
+               onclick="setActive(state.tokens[state.tokens.indexOf(t)],'w')">
+            ${t.w||0}
+          </div>
+
           <span class="frac">
-            <div class="box">${t.n||0}</div>
+            <div class="box ${t.cursor==='n'?'active':''}"
+                 onclick="setActive(state.tokens[state.tokens.indexOf(t)],'n')">
+              ${t.n||0}
+            </div>
             <div class="line"></div>
-            <div class="box">${t.d||0}</div>
+            <div class="box ${t.cursor==='d'?'active':''}"
+                 onclick="setActive(state.tokens[state.tokens.indexOf(t)],'d')">
+              ${t.d||0}
+            </div>
           </span>
         </span>
       `;
