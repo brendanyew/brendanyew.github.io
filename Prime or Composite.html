@@ -1,85 +1,124 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
-
-export default function PrimeChecker() {
-  const [value, setValue] = useState("");
-  const [result, setResult] = useState(null);
-  const [factors, setFactors] = useState([]);
-
-  function getFactors(n) {
-    const res = [];
-    for (let i = 1; i <= n; i++) {
-      if (n % i === 0) res.push(i);
-    }
-    return res;
-  }
-
-  function checkNumber() {
-    const n = parseInt(value);
-    if (!n || n < 1) {
-      setResult(null);
-      setFactors([]);
-      return;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prime Checker</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: white;
+      display: flex;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
     }
 
-    const f = getFactors(n);
-    setFactors(f);
-
-    if (n === 1) {
-      setResult("neither");
-      return;
+    .container {
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
     }
 
-    if (f.length === 2) {
-      setResult("prime");
-    } else {
-      setResult("composite");
+    .input-box {
+      display: flex;
+      border: 2px solid #ddd;
+      border-radius: 12px;
+      overflow: hidden;
     }
-  }
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6">
-      <motion.div 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
-      >
-        <div className="flex items-center border rounded-2xl overflow-hidden shadow-sm">
-          <Input
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            placeholder="Enter a number"
-            className="border-0 focus-visible:ring-0"
-          />
-          <Button onClick={checkNumber} className="rounded-none px-4">
-            <ArrowRight />
-          </Button>
-        </div>
+    input {
+      flex: 1;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      outline: none;
+    }
 
-        {result && (
-          <div className="mt-6 text-center text-xl font-semibold">
-            {result === "prime" && (
-              <span className="text-red-500">Prime</span>
-            )}
-            {result === "composite" && (
-              <span className="text-green-600">Composite</span>
-            )}
-            {result === "neither" && (
-              <span className="text-gray-500">Neither prime nor composite</span>
-            )}
-          </div>
-        )}
+    button {
+      background: #f0f0f0;
+      border: none;
+      padding: 0 16px;
+      cursor: pointer;
+      font-size: 18px;
+    }
 
-        {factors.length > 0 && (
-          <div className="mt-4 text-center text-black">
-            <p className="font-medium">Factors:</p>
-            <p>{factors.join(", ")}</p>
-          </div>
-        )}
-      </motion.div>
+    .result {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .prime {
+      color: red;
+    }
+
+    .composite {
+      color: green;
+    }
+
+    .neither {
+      color: gray;
+    }
+
+    .factors {
+      margin-top: 10px;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="input-box">
+      <input id="numInput" type="number" placeholder="Enter a number" />
+      <button onclick="checkNumber()">→</button>
     </div>
-  );
-}
+
+    <div id="result" class="result"></div>
+    <div id="factors" class="factors"></div>
+  </div>
+
+  <script>
+    function getFactors(n) {
+      const res = [];
+      for (let i = 1; i <= n; i++) {
+        if (n % i === 0) res.push(i);
+      }
+      return res;
+    }
+
+    function checkNumber() {
+      const value = document.getElementById("numInput").value;
+      const n = parseInt(value);
+      const resultDiv = document.getElementById("result");
+      const factorsDiv = document.getElementById("factors");
+
+      resultDiv.className = "result";
+      factorsDiv.innerHTML = "";
+      resultDiv.innerHTML = "";
+
+      if (!n || n < 1) return;
+
+      const factors = getFactors(n);
+
+      if (n === 1) {
+        resultDiv.textContent = "Neither prime nor composite";
+        resultDiv.classList.add("neither");
+        factorsDiv.textContent = "Factors: 1";
+        return;
+      }
+
+      factorsDiv.textContent = "Factors: " + factors.join(", ");
+
+      if (factors.length === 2) {
+        resultDiv.textContent = "Prime";
+        resultDiv.classList.add("prime");
+      } else {
+        resultDiv.textContent = "Composite";
+        resultDiv.classList.add("composite");
+      }
+    }
+  </script>
+</body>
+</html>
