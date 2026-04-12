@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Advanced Scientific Calculator</title>
+  <title>CASIO fx-991EX FINAL</title>
 
   <style>
     body{
@@ -22,14 +22,13 @@
     }
 
     #screen{
-      min-height:120px;
+      min-height:140px;
       background:#021024;
       color:white;
       padding:10px;
       border-radius:10px;
       border:2px solid #2d6cdf;
       font-family:monospace;
-      white-space:pre;
     }
 
     .grid{
@@ -50,6 +49,28 @@
 
     .shift{background:#d97b00;}
     .alpha{background:#2e8b57;}
+
+    /* FRACTION UI */
+    .frac{
+      display:inline-block;
+      text-align:center;
+      margin:0 2px;
+    }
+
+    .box{
+      width:26px;
+      height:18px;
+      border:1px solid white;
+      font-size:12px;
+      line-height:18px;
+      margin:auto;
+    }
+
+    .line{
+      border-top:1px solid white;
+      width:26px;
+      margin:auto;
+    }
   </style>
 </head>
 
@@ -68,36 +89,39 @@
     <button onclick="del()">DEL</button>
     <button onclick="input('/')">÷</button>
 
-    <button id="b1" onclick="func('sin','asin')">sin</button>
-    <button id="b2" onclick="func('cos','acos')">cos</button>
-    <button id="b3" onclick="func('tan','atan')">tan</button>
+    <button onclick="func('sin','asin')">sin</button>
+    <button onclick="func('cos','acos')">cos</button>
+    <button onclick="func('tan','atan')">tan</button>
 
-    <button id="b4" onclick="input('(')">(</button>
-    <button id="b5" onclick="input(')')">)</button>
+    <button onclick="input('(')">(</button>
+    <button onclick="input(')')">)</button>
 
-    <button id="b6" onclick="input('log')">log</button>
-    <button id="b7" onclick="input('ln')">ln</button>
-    <button id="b8" onclick="input('^')">^</button>
+    <button onclick="input('log')">log</button>
+    <button onclick="input('ln')">ln</button>
+    <button onclick="input('^')">^</button>
 
-    <button id="b9" onclick="input('*')">×</button>
+    <!-- FRACTION BUTTON -->
+    <button id="fracBtn" onclick="fraction()">a/b</button>
 
-    <button id="b11" onclick="input(7)">7</button>
-    <button id="b12" onclick="input(8)">8</button>
-    <button id="b13" onclick="input(9)">9</button>
+    <button onclick="input('*')">×</button>
 
-    <button id="b14" onclick="input('-')">−</button>
+    <button onclick="input(7)">7</button>
+    <button onclick="input(8)">8</button>
+    <button onclick="input(9)">9</button>
 
-    <button id="b16" onclick="input(4)">4</button>
-    <button id="b17" onclick="input(5)">5</button>
-    <button id="b18" onclick="input(6)">6</button>
+    <button onclick="input('-')">−</button>
 
-    <button id="b19" onclick="input('+')">+</button>
+    <button onclick="input(4)">4</button>
+    <button onclick="input(5)">5</button>
+    <button onclick="input(6)">6</button>
 
-    <button id="b21" onclick="alphaKey(1,'x')">1</button>
-    <button id="b22" onclick="alphaKey(2,'y')">2</button>
-    <button id="b23" onclick="alphaKey(3,'z')">3</button>
+    <button onclick="input('+')">+</button>
 
-    <button id="b24" onclick="solve()">=</button>
+    <button onclick="alphaKey(1,'x')">1</button>
+    <button onclick="alphaKey(2,'y')">2</button>
+    <button onclick="alphaKey(3,'z')">3</button>
+
+    <button onclick="solve()">=</button>
 
   </div>
 </div>
@@ -112,39 +136,78 @@ let state = {
   tokens:[]
 };
 
+/* ================= SHIFT ================= */
+
+function toggleShift(){
+  state.shift = !state.shift;
+
+  document.getElementById("fracBtn").textContent =
+    state.shift ? "w a/b" : "a/b";
+}
+
+/* ================= ALPHA ================= */
+
+function toggleAlpha(){
+  state.alpha = !state.alpha;
+}
+
 /* ================= INPUT ================= */
 
 function input(v){
-  if(!isNaN(v)) state.tokens.push(Number(v));
-  else state.tokens.push(v);
+
+  let t = state.tokens.at(-1);
+
+  if(t && typeof t==="object"){
+
+    if(t.type==="frac"){
+      if(t.cursor==="n") t.n += v;
+      else t.d += v;
+      render();
+      return;
+    }
+
+    if(t.type==="mix"){
+      if(t.cursor==="w") t.w += v;
+      else if(t.cursor==="n") t.n += v;
+      else t.d += v;
+      render();
+      return;
+    }
+  }
+
+  state.tokens.push(v);
   render();
 }
+
+/* ================= VARIABLES ================= */
 
 function alphaKey(n,l){
   state.tokens.push(state.alpha ? {type:"var", value:l} : n);
   render();
 }
 
-/* ================= SHIFT / ALPHA ================= */
-
-function toggleShift(){
-  state.shift = !state.shift;
-  state.alpha = false;
-  updateKeys();
-}
-
-function toggleAlpha(){
-  state.alpha = !state.alpha;
-  state.shift = false;
-  updateKeys();
-}
-
 /* ================= FUNCTIONS ================= */
 
 function func(n,s){
   state.tokens.push(state.shift ? s : n);
-  state.shift = false;
-  updateKeys();
+  state.shift=false;
+  document.getElementById("fracBtn").textContent="a/b";
+}
+
+/* ================= FRACTION ================= */
+
+function fraction(){
+
+  state.tokens.push(
+    state.shift
+      ? {type:"mix", w:"", n:"", d:"", cursor:"w"}
+      : {type:"frac", n:"", d:"", cursor:"n"}
+  );
+
+  state.shift=false;
+  document.getElementById("fracBtn").textContent="a/b";
+
+  render();
 }
 
 /* ================= DELETE ================= */
@@ -155,159 +218,94 @@ function del(){
 }
 
 function clearAll(){
-  state.tokens = [];
+  state.tokens=[];
   render();
-}
-
-/* ================= KEY LABEL SYSTEM ================= */
-
-function updateKeys(){
-
-  const normal = {
-    b1:"sin", b2:"cos", b3:"tan",
-    b4:"(", b5:")",
-    b6:"log", b7:"ln",
-    b8:"^",
-    b9:"×",
-    b11:"7", b12:"8", b13:"9",
-    b14:"−",
-    b16:"4", b17:"5", b18:"6",
-    b19:"+",
-    b21:"1", b22:"2", b23:"3",
-    b24:"="
-  };
-
-  const shift = {
-    b1:"asin",
-    b2:"acos",
-    b3:"atan"
-  };
-
-  const alpha = {
-    b21:"x",
-    b22:"y",
-    b23:"z"
-  };
-
-  let active = {...normal};
-
-  if(state.shift){
-    for(let k in active){
-      active[k] = shift[k] || "";
-    }
-  }
-
-  if(state.alpha){
-    for(let k in active){
-      active[k] = alpha[k] || "";
-    }
-  }
-
-  for(let i=1;i<=24;i++){
-    let btn = document.getElementById("b"+i);
-    if(btn) btn.textContent = active["b"+i] || "";
-  }
 }
 
 /* ================= RENDER ================= */
 
 function render(){
-  document.getElementById("screen").textContent =
-    state.tokens.map(t =>
-      typeof t==="object" ? t.value : t
-    ).join(" ");
+
+  let out="";
+
+  for(let t of state.tokens){
+
+    if(typeof t==="string" || typeof t==="number"){
+      out += t + " ";
+    }
+
+    else if(t.type==="var"){
+      out += t.value + " ";
+    }
+
+    else if(t.type==="frac"){
+      out += `
+        <span class="frac">
+          <div class="box">${t.n||0}</div>
+          <div class="line"></div>
+          <div class="box">${t.d||0}</div>
+        </span>
+      `;
+    }
+
+    else if(t.type==="mix"){
+      out += `
+        <span class="frac">
+          <div class="box">${t.w||0}</div>
+          <div class="box">${t.n||0}</div>
+          <div class="line"></div>
+          <div class="box">${t.d||0}</div>
+        </span>
+      `;
+    }
+  }
+
+  document.getElementById("screen").innerHTML = out;
 }
 
-/* ================= PARSER ================= */
+/* ================= SOLVE ================= */
 
 function solve(){
 
   try{
-    const expr = buildExpression(state.tokens);
-    const result = evaluateExpression(expr);
-
-    document.getElementById("screen").textContent = result;
-
-  } catch{
-    document.getElementById("screen").textContent = "Error";
+    let expr = buildExpression(state.tokens);
+    let result = eval(expr);
+    document.getElementById("screen").innerHTML = result;
+  }catch{
+    document.getElementById("screen").innerHTML = "Error";
   }
 }
 
 function buildExpression(tokens){
 
-  let out = "";
+  let out="";
 
   for(let t of tokens){
 
-    if(typeof t === "number"){
-      out += t;
-    }
+    if(typeof t==="number") out+=t;
 
-    else if(typeof t === "string"){
+    else if(typeof t==="string"){
       if(t==="×") out+="*";
       else if(t==="−") out+="-";
       else out+=t;
     }
 
     else if(t.type==="var"){
-      out += 0;
+      out+=0;
+    }
+
+    else if(t.type==="frac"){
+      out += (Number(t.n||0)/Number(t.d||1));
+    }
+
+    else if(t.type==="mix"){
+      out += (Number(t.w||0)+(Number(t.n||0)/Number(t.d||1)));
     }
   }
 
   return out;
 }
 
-function evaluateExpression(expr){
-
-  const tokens = expr.match(/(\d+\.?\d*|[+\-*/^()])/g);
-  const output=[], ops=[];
-  const prec={"+":1,"-":1,"*":2,"/":2,"^":3};
-
-  for(let t of tokens){
-
-    if(!isNaN(t)) output.push(Number(t));
-
-    else if(t in prec){
-      while(ops.length && prec[ops.at(-1)]>=prec[t]){
-        output.push(ops.pop());
-      }
-      ops.push(t);
-    }
-
-    else if(t==="(") ops.push(t);
-
-    else if(t===")"){
-      while(ops.at(-1)!=="("){
-        output.push(ops.pop());
-      }
-      ops.pop();
-    }
-  }
-
-  while(ops.length) output.push(ops.pop());
-
-  let stack=[];
-
-  for(let t of output){
-
-    if(typeof t==="number") stack.push(t);
-
-    else{
-      let b=stack.pop(), a=stack.pop();
-
-      if(t==="+") stack.push(a+b);
-      if(t==="-") stack.push(a-b);
-      if(t==="*") stack.push(a*b);
-      if(t==="/") stack.push(a/b);
-      if(t==="^") stack.push(Math.pow(a,b));
-    }
-  }
-
-  return stack[0];
-}
-
-/* INIT */
-updateKeys();
 render();
 
 </script>
