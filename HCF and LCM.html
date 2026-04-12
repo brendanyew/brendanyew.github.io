@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HCF & LCM Calculator</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: white;
+        color: black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+
+    .container {
+        text-align: center;
+        width: 100%;
+        max-width: 500px;
+    }
+
+    h1 {
+        margin-bottom: 20px;
+    }
+
+    .input-box {
+        display: flex;
+        border: 2px solid black;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    input {
+        flex: 1;
+        padding: 12px;
+        font-size: 16px;
+        border: none;
+        outline: none;
+    }
+
+    button {
+        background: black;
+        color: white;
+        border: none;
+        padding: 0 20px;
+        font-size: 18px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #333;
+    }
+
+    .result {
+        margin-top: 20px;
+        font-size: 18px;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>HCF & LCM Calculator</h1>
+
+    <div class="input-box">
+        <input id="numbers" type="text" placeholder="Enter numbers separated by commas (e.g. 12, 18, 24)">
+        <button onclick="calculate()">➜</button>
+    </div>
+
+    <div class="result" id="result"></div>
+</div>
+
+<script>
+    function gcd(a, b) {
+        return b === 0 ? a : gcd(b, a % b);
+    }
+
+    function lcm(a, b) {
+        return (a * b) / gcd(a, b);
+    }
+
+    function calculate() {
+        let input = document.getElementById("numbers").value;
+
+        let nums = input.split(",")
+                        .map(n => parseInt(n.trim()))
+                        .filter(n => !isNaN(n));
+
+        if (nums.length < 2) {
+            document.getElementById("result").innerHTML =
+                "Please enter at least 2 valid numbers.";
+            return;
+        }
+
+        // HCF (GCD of all numbers)
+        let hcf = nums.reduce((acc, val) => gcd(acc, val));
+
+        // LCM of all numbers
+        let lcmResult = nums.reduce((acc, val) => lcm(acc, val));
+
+        document.getElementById("result").innerHTML =
+            `<p><b>HCF:</b> ${hcf}</p>
+             <p><b>LCM:</b> ${lcmResult}</p>`;
+    }
+</script>
+
+</body>
+</html>
