@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>CASIO fx-991EX FINAL</title>
+  <title>Advanced Scientific Calculator</title>
 
   <style>
     body{
@@ -70,7 +70,6 @@
 
     .activeMode{background:#3a5fbf !important;}
 
-    /* FRACTION UI */
     .frac{
       display:inline-block;
       text-align:center;
@@ -151,11 +150,11 @@
     <button onclick="input('+')" id="b19">+</button>
     <button onclick="input('pi')" id="b20">π</button>
 
+    <!-- VARIABLES FIXED -->
     <button onclick="alphaKey(1,'x')" id="b21">1</button>
     <button onclick="alphaKey(2,'y')" id="b22">2</button>
     <button onclick="alphaKey(3,'z')" id="b23">3</button>
 
-    <!-- FIXED EQUAL BUTTON -->
     <button onclick="solve()" id="b24">=</button>
 
   </div>
@@ -214,10 +213,10 @@ function input(v){
   render();
 }
 
-/* ================= ALPHA ================= */
+/* ================= VARIABLES (FIXED) ================= */
 
 function alphaKey(n,l){
-  state.tokens.push(state.alpha ? l : n);
+  state.tokens.push(state.alpha ? {type:"var", value:l} : n);
   render();
 }
 
@@ -241,7 +240,7 @@ function func(n,s){
   updateKeys();
 }
 
-/* ================= FRACTION ================= */
+/* ================= FRACTIONS ================= */
 
 function fraction(){
   state.tokens.push(
@@ -298,9 +297,9 @@ function updateKeys(){
   };
 
   let alpha = {
-    b11:"x",
-    b12:"y",
-    b13:"z"
+    b21:"x",
+    b22:"y",
+    b23:"z"
   };
 
   let active = {...normal};
@@ -333,6 +332,10 @@ function render(){
 
     if(typeof t==="string" || typeof t==="number"){
       out += t + " ";
+    }
+
+    else if(t.type==="var"){
+      out += t.value + " ";
     }
 
     else if(t.type==="frac"){
@@ -383,11 +386,19 @@ function solve(){
       if(t==="acos") stack.push(Math.acos(stack.pop())*180/Math.PI);
       if(t==="atan") stack.push(Math.atan(stack.pop())*180/Math.PI);
 
+      if(t==="*" || t==="×"){
+        let b=stack.pop(), a=stack.pop();
+        stack.push(a*b);
+      }
+
       if(t==="+"){let b=stack.pop(),a=stack.pop();stack.push(a+b);}
-      if(t==="-"){let b=stack.pop(),a=stack.pop();stack.push(a-b);}
-      if(t==="*"){let b=stack.pop(),a=stack.pop();stack.push(a*b);}
+      if(t==="−" || t==="-"){let b=stack.pop(),a=stack.pop();stack.push(a-b);}
       if(t==="/"){let b=stack.pop(),a=stack.pop();stack.push(a/b);}
       if(t==="^"){let b=stack.pop(),a=stack.pop();stack.push(Math.pow(a,b));}
+    }
+
+    else if(t.type==="var"){
+      stack.push(0);
     }
 
     else if(t.type==="frac"){
