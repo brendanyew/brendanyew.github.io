@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Advanced Scientific Calculator</title>
+  <title>Casio Style Scientific Calculator</title>
+
   <style>
     body {
       background: #0a1a33;
@@ -16,7 +17,7 @@
       background: #102a54;
       padding: 15px;
       border-radius: 20px;
-      width: 320px;
+      width: 340px;
     }
 
     #display {
@@ -30,19 +31,6 @@
       color: white;
       border: 2px solid #2d6cdf;
       border-radius: 10px;
-      position: relative;
-    }
-
-    #display::after {
-      content: "|";
-      position: absolute;
-      right: 10px;
-      animation: blink 1s infinite;
-    }
-
-    @keyframes blink {
-      0%,100% {opacity:1;}
-      50% {opacity:0;}
     }
 
     .buttons {
@@ -59,35 +47,43 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      transition: 0.1s;
     }
 
-    .orange { background: #d97b00; }
-    .green { background: #2e8b57; }
+    button:active {
+      transform: scale(0.95);
+    }
+
+    .shift { background: #d97b00 !important; }
+    .alpha { background: #2e8b57 !important; }
     .wide { grid-column: span 2; }
   </style>
 </head>
+
 <body>
 
 <div class="calculator">
+
   <input id="display" placeholder="0" disabled>
 
   <div class="buttons">
-    <button class="orange" onclick="toggleShift()">SHIFT</button>
-    <button class="green" onclick="toggleAlpha()">ALPHA</button>
+
+    <button id="shiftBtn" class="shift" onclick="toggleShift()">SHIFT</button>
+    <button id="alphaBtn" class="alpha" onclick="toggleAlpha()">ALPHA</button>
     <button onclick="clearAll()">AC</button>
     <button onclick="del()">DEL</button>
     <button onclick="append('/')">÷</button>
 
-    <button onclick="pressFunc('sin','asin')">sin</button>
-    <button onclick="pressFunc('cos','acos')">cos</button>
-    <button onclick="pressFunc('tan','atan')">tan</button>
+    <button data-n="sin(" data-s="asin(" onclick="func(this)">sin</button>
+    <button data-n="cos(" data-s="acos(" onclick="func(this)">cos</button>
+    <button data-n="tan(" data-s="atan(" onclick="func(this)">tan</button>
     <button onclick="append('(')">(</button>
     <button onclick="append(')')">)</button>
 
     <button onclick="append('log(')">log</button>
     <button onclick="append('ln(')">ln</button>
     <button onclick="append('^')">^</button>
-    <button onclick="appendFraction()">a/b</button>
+    <button onclick="append('/')">a/b</button>
     <button onclick="append('*')">×</button>
 
     <button onclick="append('7')">7</button>
@@ -102,82 +98,105 @@
     <button onclick="append('+')">+</button>
     <button onclick="append('pi')">π</button>
 
-    <button onclick="appendAlpha('x')">1</button>
-    <button onclick="appendAlpha('y')">2</button>
-    <button onclick="appendAlpha('z')">3</button>
+    <!-- ALPHA KEYS -->
+    <button data-n="1" data-a="x" onclick="alphaKey(this)">1</button>
+    <button data-n="2" data-a="y" onclick="alphaKey(this)">2</button>
+    <button data-n="3" data-a="z" onclick="alphaKey(this)">3</button>
+
     <button onclick="append('.')">.</button>
     <button onclick="append('0')">0</button>
 
     <button class="wide" onclick="calculate()">=</button>
+
   </div>
 </div>
 
 <script>
+
 let display = document.getElementById("display");
 
 let shift = false;
 let alpha = false;
 
-/* ===== BUTTON MODES ===== */
+/* =========================
+   MODE TOGGLES
+========================= */
 
 function toggleShift() {
   shift = !shift;
+  document.getElementById("shiftBtn").style.opacity = shift ? "0.6" : "1";
 }
 
 function toggleAlpha() {
   alpha = !alpha;
+  document.getElementById("alphaBtn").style.opacity = alpha ? "0.6" : "1";
+  renderAlphaKeys();
 }
 
-/* ===== INPUT ===== */
+/* =========================
+   DYNAMIC ALPHA KEYS
+========================= */
+
+function renderAlphaKeys() {
+  document.querySelectorAll("button[data-n]").forEach(btn => {
+    btn.innerText = alpha ? btn.dataset.a : btn.dataset.n;
+  });
+}
+
+/* =========================
+   INPUT FUNCTIONS
+========================= */
 
 function append(val) {
   display.value += val;
 }
 
-function appendAlpha(letter) {
-  if (alpha) {
-    display.value += letter;
-    alpha = false;
-  } else {
-    display.value += event.target.innerText;
-  }
-}
-
-function appendFraction() {
-  display.value += "/";
+function alphaKey(btn) {
+  display.value += alpha ? btn.dataset.a : btn.dataset.n;
 }
 
 /* SHIFT FUNCTIONS */
-function pressFunc(normal, shifted) {
-  if (shift) {
-    display.value += shifted + "(";
-    shift = false;
-  } else {
-    display.value += normal + "(";
-  }
+function func(btn) {
+  let val = shift ? btn.dataset.s : btn.dataset.n;
+  display.value += val;
+  shift = false;
+  document.getElementById("shiftBtn").style.opacity = "1";
 }
 
-/* ===== CONTROLS ===== */
+/* =========================
+   CONTROLS
+========================= */
 
-function clearAll() { display.value = ""; }
-function del() { display.value = display.value.slice(0, -1); }
+function clearAll() {
+  display.value = "";
+}
 
-/* ===== CALCULATE ===== */
+function del() {
+  display.value = display.value.slice(0, -1);
+}
+
+/* =========================
+   CALCULATE
+========================= */
 
 function calculate() {
   try {
     display.value = evaluate(display.value);
-  } catch {
+  } catch (e) {
     display.value = "Error";
   }
 }
 
-/* ===== PARSER ===== */
+/* =========================
+   PARSER
+========================= */
 
 function evaluate(expr) {
-  expr = expr.replace(/pi/g, Math.PI);
 
-  let tokens = expr.match(/asin|acos|atan|sin|cos|tan|sqrt|log|ln|\d+\.?\d*|[a-z]+|[+\-*/^()]/g);
+  expr = expr.replace(/\bpi\b/g, Math.PI);
+
+  let tokens = expr.match(/asin|acos|atan|sin|cos|tan|sqrt|log|ln|\d*\.?\d+|[a-z]+|[+\-*/^()]/g);
+
   let rpn = toRPN(tokens);
   return evalRPN(rpn);
 }
@@ -186,48 +205,75 @@ function toRPN(tokens) {
   let out = [], ops = [];
   let prec = {"+":1,"-":1,"*":2,"/":2,"^":3};
 
+  const isFunc = t => /^[a-z]+$/.test(t);
+
   tokens.forEach(t => {
     if (!isNaN(t)) out.push(t);
-    else if (/^[a-z]+$/.test(t)) ops.push(t);
+
+    else if (isFunc(t)) ops.push(t);
+
     else if (t === "(") ops.push(t);
+
     else if (t === ")") {
-      while (ops.length && ops.at(-1) !== "(") out.push(ops.pop());
+      while (ops.length && ops.at(-1) !== "(") {
+        out.push(ops.pop());
+      }
       ops.pop();
-    } else {
-      while (ops.length && prec[ops.at(-1)] >= prec[t]) out.push(ops.pop());
+
+      if (ops.length && isFunc(ops.at(-1))) {
+        out.push(ops.pop());
+      }
+    }
+
+    else {
+      while (
+        ops.length &&
+        prec[ops.at(-1)] >= prec[t] &&
+        t !== "^"
+      ) {
+        out.push(ops.pop());
+      }
       ops.push(t);
     }
   });
 
-  return out.concat(ops.reverse());
+  while (ops.length) out.push(ops.pop());
+
+  return out;
 }
 
 function evalRPN(rpn) {
   let s = [];
 
   rpn.forEach(t => {
+
     if (!isNaN(t)) s.push(+t);
+
     else if ("+-*/^".includes(t)) {
       let b = s.pop(), a = s.pop();
+
       s.push(
-        t==="+"?a+b:
-        t==="-"?a-b:
-        t==="*"?a*b:
-        t==="/"?a/b:
+        t==="+" ? a+b :
+        t==="-" ? a-b :
+        t==="*" ? a*b :
+        t==="/" ? a/b :
         Math.pow(a,b)
       );
-    } else {
+    }
+
+    else {
       let a = s.pop();
+
       s.push(
-        t==="sin"?Math.sin(a*Math.PI/180):
-        t==="cos"?Math.cos(a*Math.PI/180):
-        t==="tan"?Math.tan(a*Math.PI/180):
-        t==="asin"?Math.asin(a)*180/Math.PI:
-        t==="acos"?Math.acos(a)*180/Math.PI:
-        t==="atan"?Math.atan(a)*180/Math.PI:
-        t==="sqrt"?Math.sqrt(a):
-        t==="log"?Math.log10(a):
-        t==="ln"?Math.log(a):
+        t==="sin" ? Math.sin(a*Math.PI/180) :
+        t==="cos" ? Math.cos(a*Math.PI/180) :
+        t==="tan" ? Math.tan(a*Math.PI/180) :
+        t==="asin" ? Math.asin(a)*180/Math.PI :
+        t==="acos" ? Math.acos(a)*180/Math.PI :
+        t==="atan" ? Math.atan(a)*180/Math.PI :
+        t==="sqrt" ? Math.sqrt(a) :
+        t==="log" ? Math.log10(a) :
+        t==="ln" ? Math.log(a) :
         0
       );
     }
@@ -235,6 +281,7 @@ function evalRPN(rpn) {
 
   return s[0];
 }
+
 </script>
 
 </body>
