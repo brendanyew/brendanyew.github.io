@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>CASIO fx-991EX FINAL</title>
+  <title>Advanced Scientific Calculator</title>
 
   <style>
     body{
       margin:0;
-      background:#0a1a33;
+      background:white;
       display:flex;
       justify-content:center;
       align-items:center;
@@ -14,7 +14,6 @@
       font-family:Arial;
     }
 
-    /* 🔥 NEW WRAPPER */
     .container{
       display:flex;
       flex-direction:column;
@@ -31,6 +30,7 @@
       background:#102a54;
       padding:15px;
       border-radius:16px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.2);
     }
 
     #screen{
@@ -88,7 +88,7 @@
 
 <div class="container">
 
-  <!-- 🔥 LOGO NOW ON TOP -->
+  <!-- LOGO -->
   <div class="logo">
     <a href="index.html">
       <img src="Logo.png" alt="Brendan's Website">
@@ -143,7 +143,6 @@
       <button onclick="solve()">=</button>
 
     </div>
-
   </div>
 </div>
 
@@ -161,14 +160,14 @@ let state = {
 
 function toggleShift(){
   state.shift = !state.shift;
-  document.getElementById("fracBtn").textContent =
-    state.shift ? "w a/b" : "a/b";
+  updateKeys();
 }
 
 /* ================= ALPHA ================= */
 
 function toggleAlpha(){
   state.alpha = !state.alpha;
+  updateKeys();
 }
 
 /* ================= INPUT ================= */
@@ -211,7 +210,7 @@ function alphaKey(n,l){
 function func(n,s){
   state.tokens.push(state.shift ? s : n);
   state.shift=false;
-  document.getElementById("fracBtn").textContent="a/b";
+  updateKeys();
 }
 
 /* ================= FRACTION ================= */
@@ -225,8 +224,7 @@ function fraction(){
   );
 
   state.shift=false;
-  document.getElementById("fracBtn").textContent="a/b";
-
+  updateKeys();
   render();
 }
 
@@ -240,6 +238,51 @@ function del(){
 function clearAll(){
   state.tokens=[];
   render();
+}
+
+/* ================= KEY UPDATE (SHIFT / ALPHA BLANK SYSTEM) ================= */
+
+function updateKeys(){
+
+  const normal = {
+    b1:"sin", b2:"cos", b3:"tan",
+    b4:"(", b5:")",
+    b6:"log", b7:"ln",
+    b8:"^",
+    b10:"÷",
+    b11:"7", b12:"8", b13:"9",
+    b14:"−",
+    b16:"4", b17:"5", b18:"6",
+    b19:"+",
+    b21:"1", b22:"2", b23:"3"
+  };
+
+  const shift = {
+    b1:"asin",
+    b2:"acos",
+    b3:"atan"
+  };
+
+  const alpha = {
+    b21:"x",
+    b22:"y",
+    b23:"z"
+  };
+
+  for(let i=1;i<=24;i++){
+    let btn=document.getElementById("b"+i);
+    if(!btn) continue;
+
+    if(state.shift){
+      btn.textContent = shift["b"+i] || "";
+    }
+    else if(state.alpha){
+      btn.textContent = alpha["b"+i] || "";
+    }
+    else{
+      btn.textContent = normal["b"+i] || "";
+    }
+  }
 }
 
 /* ================= RENDER ================= */
@@ -288,6 +331,7 @@ function render(){
 /* ================= SOLVE ================= */
 
 function solve(){
+
   try{
     let expr = state.tokens.map(t=>{
       if(typeof t==="number") return t;
