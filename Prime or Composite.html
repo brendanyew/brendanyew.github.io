@@ -1,0 +1,85 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
+
+export default function PrimeChecker() {
+  const [value, setValue] = useState("");
+  const [result, setResult] = useState(null);
+  const [factors, setFactors] = useState([]);
+
+  function getFactors(n) {
+    const res = [];
+    for (let i = 1; i <= n; i++) {
+      if (n % i === 0) res.push(i);
+    }
+    return res;
+  }
+
+  function checkNumber() {
+    const n = parseInt(value);
+    if (!n || n < 1) {
+      setResult(null);
+      setFactors([]);
+      return;
+    }
+
+    const f = getFactors(n);
+    setFactors(f);
+
+    if (n === 1) {
+      setResult("neither");
+      return;
+    }
+
+    if (f.length === 2) {
+      setResult("prime");
+    } else {
+      setResult("composite");
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6">
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md"
+      >
+        <div className="flex items-center border rounded-2xl overflow-hidden shadow-sm">
+          <Input
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder="Enter a number"
+            className="border-0 focus-visible:ring-0"
+          />
+          <Button onClick={checkNumber} className="rounded-none px-4">
+            <ArrowRight />
+          </Button>
+        </div>
+
+        {result && (
+          <div className="mt-6 text-center text-xl font-semibold">
+            {result === "prime" && (
+              <span className="text-red-500">Prime</span>
+            )}
+            {result === "composite" && (
+              <span className="text-green-600">Composite</span>
+            )}
+            {result === "neither" && (
+              <span className="text-gray-500">Neither prime nor composite</span>
+            )}
+          </div>
+        )}
+
+        {factors.length > 0 && (
+          <div className="mt-4 text-center text-black">
+            <p className="font-medium">Factors:</p>
+            <p>{factors.join(", ")}</p>
+          </div>
+        )}
+      </motion.div>
+    </div>
+  );
+}
