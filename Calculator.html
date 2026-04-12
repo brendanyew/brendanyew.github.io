@@ -88,14 +88,12 @@
 
 <div class="container">
 
-  <!-- LOGO -->
   <div class="logo">
     <a href="index.html">
       <img src="Logo.png" alt="Brendan's Website">
     </a>
   </div>
 
-  <!-- CALCULATOR -->
   <div class="calc">
 
     <div id="screen"></div>
@@ -109,38 +107,38 @@
       <button onclick="del()">DEL</button>
       <button onclick="input('/')">÷</button>
 
-      <button onclick="func('sin','asin')">sin</button>
-      <button onclick="func('cos','acos')">cos</button>
-      <button onclick="func('tan','atan')">tan</button>
+      <button onclick="func('sin','asin')" id="b1">sin</button>
+      <button onclick="func('cos','acos')" id="b2">cos</button>
+      <button onclick="func('tan','atan')" id="b3">tan</button>
 
-      <button onclick="input('(')">(</button>
-      <button onclick="input(')')">)</button>
+      <button onclick="input('(')" id="b4">(</button>
+      <button onclick="input(')')" id="b5">)</button>
 
-      <button onclick="input('log')">log</button>
-      <button onclick="input('ln')">ln</button>
-      <button onclick="input('^')">^</button>
+      <button onclick="input('log')" id="b6">log</button>
+      <button onclick="input('ln')" id="b7">ln</button>
+      <button onclick="input('^')" id="b8">^</button>
 
-      <button id="fracBtn" onclick="fraction()">a/b</button>
+      <button onclick="fraction()" id="fracBtn">a/b</button>
 
-      <button onclick="input('*')">×</button>
+      <button onclick="input('*')" id="b9">×</button>
 
-      <button onclick="input(7)">7</button>
-      <button onclick="input(8)">8</button>
-      <button onclick="input(9)">9</button>
+      <button onclick="input(7)" id="b11">7</button>
+      <button onclick="input(8)" id="b12">8</button>
+      <button onclick="input(9)" id="b13">9</button>
 
-      <button onclick="input('-')">−</button>
+      <button onclick="input('-')" id="b14">−</button>
 
-      <button onclick="input(4)">4</button>
-      <button onclick="input(5)">5</button>
-      <button onclick="input(6)">6</button>
+      <button onclick="input(4)" id="b16">4</button>
+      <button onclick="input(5)" id="b17">5</button>
+      <button onclick="input(6)" id="b18">6</button>
 
-      <button onclick="input('+')">+</button>
+      <button onclick="input('+')" id="b19">+</button>
 
-      <button onclick="alphaKey(1,'x')">1</button>
-      <button onclick="alphaKey(2,'y')">2</button>
-      <button onclick="alphaKey(3,'z')">3</button>
+      <button onclick="alphaKey(1,'x')" id="b21">1</button>
+      <button onclick="alphaKey(2,'y')" id="b22">2</button>
+      <button onclick="alphaKey(3,'z')" id="b23">3</button>
 
-      <button onclick="solve()">=</button>
+      <button onclick="solve()" id="b24">=</button>
 
     </div>
   </div>
@@ -156,91 +154,19 @@ let state = {
   tokens:[]
 };
 
-/* ================= SHIFT ================= */
+/* ================= SHIFT / ALPHA FIX ================= */
 
 function toggleShift(){
   state.shift = !state.shift;
   updateKeys();
 }
 
-/* ================= ALPHA ================= */
-
 function toggleAlpha(){
   state.alpha = !state.alpha;
   updateKeys();
 }
 
-/* ================= INPUT ================= */
-
-function input(v){
-
-  let t = state.tokens.at(-1);
-
-  if(t && typeof t==="object"){
-
-    if(t.type==="frac"){
-      if(t.cursor==="n") t.n += v;
-      else t.d += v;
-      render();
-      return;
-    }
-
-    if(t.type==="mix"){
-      if(t.cursor==="w") t.w += v;
-      else if(t.cursor==="n") t.n += v;
-      else t.d += v;
-      render();
-      return;
-    }
-  }
-
-  state.tokens.push(v);
-  render();
-}
-
-/* ================= VARIABLES ================= */
-
-function alphaKey(n,l){
-  state.tokens.push(state.alpha ? {type:"var", value:l} : n);
-  render();
-}
-
-/* ================= FUNCTIONS ================= */
-
-function func(n,s){
-  state.tokens.push(state.shift ? s : n);
-  state.shift=false;
-  updateKeys();
-}
-
-/* ================= FRACTION ================= */
-
-function fraction(){
-
-  state.tokens.push(
-    state.shift
-      ? {type:"mix", w:"", n:"", d:"", cursor:"w"}
-      : {type:"frac", n:"", d:"", cursor:"n"}
-  );
-
-  state.shift=false;
-  updateKeys();
-  render();
-}
-
-/* ================= DELETE ================= */
-
-function del(){
-  state.tokens.pop();
-  render();
-}
-
-function clearAll(){
-  state.tokens=[];
-  render();
-}
-
-/* ================= KEY UPDATE (SHIFT / ALPHA BLANK SYSTEM) ================= */
+/* ================= KEY LABEL SYSTEM (FIXED PROPERLY) ================= */
 
 function updateKeys(){
 
@@ -249,12 +175,13 @@ function updateKeys(){
     b4:"(", b5:")",
     b6:"log", b7:"ln",
     b8:"^",
-    b10:"÷",
+    b9:"×",
     b11:"7", b12:"8", b13:"9",
     b14:"−",
     b16:"4", b17:"5", b18:"6",
     b19:"+",
-    b21:"1", b22:"2", b23:"3"
+    b21:"1", b22:"2", b23:"3",
+    b24:"="
   };
 
   const shift = {
@@ -285,7 +212,61 @@ function updateKeys(){
   }
 }
 
-/* ================= RENDER ================= */
+/* ================= INPUT ================= */
+
+function input(v){
+
+  let t = state.tokens.at(-1);
+
+  if(t && typeof t==="object"){
+
+    if(t.type==="frac"){
+      if(t.cursor==="n") t.n += v;
+      else t.d += v;
+      render();
+      return;
+    }
+
+    if(t.type==="mix"){
+      if(t.cursor==="w") t.w += v;
+      else if(t.cursor==="n") t.n += v;
+      else t.d += v;
+      render();
+      return;
+    }
+  }
+
+  state.tokens.push(v);
+  render();
+}
+
+/* ================= OTHER FEATURES (UNCHANGED) ================= */
+
+function alphaKey(n,l){
+  state.tokens.push(state.alpha ? {type:"var", value:l} : n);
+  render();
+}
+
+function func(n,s){
+  state.tokens.push(state.shift ? s : n);
+  state.shift=false;
+  updateKeys();
+}
+
+function fraction(){
+  state.tokens.push(
+    state.shift
+      ? {type:"mix", w:"", n:"", d:"", cursor:"w"}
+      : {type:"frac", n:"", d:"", cursor:"n"}
+  );
+
+  state.shift=false;
+  updateKeys();
+  render();
+}
+
+function del(){ state.tokens.pop(); render(); }
+function clearAll(){ state.tokens=[]; render(); }
 
 function render(){
 
@@ -328,10 +309,7 @@ function render(){
   document.getElementById("screen").innerHTML = out;
 }
 
-/* ================= SOLVE ================= */
-
 function solve(){
-
   try{
     let expr = state.tokens.map(t=>{
       if(typeof t==="number") return t;
@@ -352,6 +330,7 @@ function solve(){
 }
 
 render();
+updateKeys();
 
 </script>
 
