@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Scientific Calculator</title>
+  <title>Casio Style Calculator</title>
   <style>
     body {
       background: #0a1a33;
@@ -14,31 +14,26 @@
 
     .calculator {
       background: #102a54;
-      padding: 20px;
+      padding: 15px;
       border-radius: 20px;
-      width: 300px;
+      width: 320px;
     }
 
-    /* DISPLAY (FIXED + CURSOR) */
     #display {
       width: 100%;
       height: 60px;
       font-size: 22px;
       text-align: right;
       padding: 10px;
-      margin-bottom: 15px;
-
+      margin-bottom: 10px;
       background: #021024;
-      color: #ffffff;
-
+      color: white;
       border: 2px solid #2d6cdf;
       border-radius: 10px;
-
       box-shadow: inset 0 0 10px rgba(0,0,0,0.7);
       position: relative;
     }
 
-    /* blinking cursor */
     #display::after {
       content: "|";
       position: absolute;
@@ -47,28 +42,34 @@
     }
 
     @keyframes blink {
-      0%, 50%, 100% { opacity: 1; }
-      25%, 75% { opacity: 0; }
+      0%,100% { opacity: 1; }
+      50% { opacity: 0; }
     }
 
     .buttons {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
     }
 
     button {
-      padding: 14px;
+      padding: 10px;
+      font-size: 13px;
       background: #1e4fa3;
       color: white;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       cursor: pointer;
     }
 
     button:hover {
       background: #2d6cdf;
     }
+
+    .small { font-size: 11px; padding: 8px; }
+    .wide { grid-column: span 2; }
+    .orange { background: #d97b00; }
+    .green { background: #2e8b57; }
   </style>
 </head>
 <body>
@@ -77,59 +78,54 @@
   <input id="display" placeholder="0" disabled>
 
   <div class="buttons">
+    <!-- Top row -->
+    <button class="small orange">SHIFT</button>
+    <button class="small green">ALPHA</button>
     <button onclick="clearAll()">AC</button>
     <button onclick="del()">DEL</button>
+    <button onclick="append('/')">÷</button>
+
+    <!-- Scientific -->
+    <button class="small" onclick="append('sin(')">sin</button>
+    <button class="small" onclick="append('cos(')">cos</button>
+    <button class="small" onclick="append('tan(')">tan</button>
     <button onclick="append('(')">(</button>
     <button onclick="append(')')">)</button>
 
-    <button onclick="append('sin(')">sin</button>
-    <button onclick="append('cos(')">cos</button>
-    <button onclick="append('tan(')">tan</button>
-    <button onclick="append('sqrt(')">√</button>
-
-    <button onclick="append('log(')">log</button>
-    <button onclick="append('ln(')">ln</button>
+    <button class="small" onclick="append('log(')">log</button>
+    <button class="small" onclick="append('ln(')">ln</button>
     <button onclick="append('^')">^</button>
     <button onclick="append('%')">%</button>
+    <button onclick="append('*')">×</button>
 
     <button onclick="append('7')">7</button>
     <button onclick="append('8')">8</button>
     <button onclick="append('9')">9</button>
-    <button onclick="append('/')">÷</button>
+    <button onclick="append('-')">−</button>
+    <button onclick="append('sqrt(')">√</button>
 
     <button onclick="append('4')">4</button>
     <button onclick="append('5')">5</button>
     <button onclick="append('6')">6</button>
-    <button onclick="append('*')">×</button>
+    <button onclick="append('+')">+</button>
+    <button onclick="append('pi')">π</button>
 
     <button onclick="append('1')">1</button>
     <button onclick="append('2')">2</button>
     <button onclick="append('3')">3</button>
-    <button onclick="append('-')">−</button>
-
-    <button onclick="append('0')">0</button>
     <button onclick="append('.')">.</button>
-    <button onclick="append('pi')">π</button>
-    <button onclick="append('+')">+</button>
+    <button onclick="append('0')">0</button>
 
-    <button onclick="calculate()">=</button>
+    <button class="wide" onclick="calculate()">=</button>
   </div>
 </div>
 
 <script>
 let display = document.getElementById("display");
 
-function append(val) {
-  display.value += val;
-}
-
-function clearAll() {
-  display.value = "";
-}
-
-function del() {
-  display.value = display.value.slice(0, -1);
-}
+function append(val) { display.value += val; }
+function clearAll() { display.value = ""; }
+function del() { display.value = display.value.slice(0, -1); }
 
 function calculate() {
   try {
@@ -139,84 +135,63 @@ function calculate() {
   }
 }
 
-// --- PARSER ---
+/* ===== PARSER ===== */
 
 function evaluate(expr) {
   expr = expr.replace(/pi/g, Math.PI);
-
-  let tokens = tokenize(expr);
+  let tokens = expr.match(/sin|cos|tan|sqrt|log|ln|\d+\.?\d*|[+\-*/^()%]/g);
   let rpn = toRPN(tokens);
   return evalRPN(rpn);
 }
 
-function tokenize(expr) {
-  return expr.match(/sin|cos|tan|sqrt|log|ln|\d+\.?\d*|[+\-*/^()%]/g);
-}
-
 function toRPN(tokens) {
-  let output = [];
-  let ops = [];
+  let out = [], ops = [];
   let prec = {"+":1,"-":1,"*":2,"/":2,"^":3};
 
-  tokens.forEach(token => {
-    if (!isNaN(token)) {
-      output.push(token);
-    }
-    else if (["sin","cos","tan","sqrt","log","ln"].includes(token)) {
-      ops.push(token);
-    }
-    else if (token === "(") {
-      ops.push(token);
-    }
-    else if (token === ")") {
-      while (ops.length && ops[ops.length-1] !== "(") {
-        output.push(ops.pop());
-      }
+  tokens.forEach(t => {
+    if (!isNaN(t)) out.push(t);
+    else if (["sin","cos","tan","sqrt","log","ln"].includes(t)) ops.push(t);
+    else if (t === "(") ops.push(t);
+    else if (t === ")") {
+      while (ops.length && ops.at(-1) !== "(") out.push(ops.pop());
       ops.pop();
-    }
-    else {
-      while (ops.length && prec[ops[ops.length-1]] >= prec[token]) {
-        output.push(ops.pop());
-      }
-      ops.push(token);
+    } else {
+      while (ops.length && prec[ops.at(-1)] >= prec[t]) out.push(ops.pop());
+      ops.push(t);
     }
   });
 
-  return output.concat(ops.reverse());
+  return out.concat(ops.reverse());
 }
 
 function evalRPN(rpn) {
-  let stack = [];
+  let s = [];
 
-  rpn.forEach(token => {
-    if (!isNaN(token)) {
-      stack.push(parseFloat(token));
-    }
-    else if (["+", "-", "*", "/", "^"].includes(token)) {
-      let b = stack.pop();
-      let a = stack.pop();
-      switch(token) {
-        case "+": stack.push(a+b); break;
-        case "-": stack.push(a-b); break;
-        case "*": stack.push(a*b); break;
-        case "/": stack.push(a/b); break;
-        case "^": stack.push(Math.pow(a,b)); break;
-      }
-    }
-    else {
-      let a = stack.pop();
-      switch(token) {
-        case "sin": stack.push(Math.sin(a*Math.PI/180)); break;
-        case "cos": stack.push(Math.cos(a*Math.PI/180)); break;
-        case "tan": stack.push(Math.tan(a*Math.PI/180)); break;
-        case "sqrt": stack.push(Math.sqrt(a)); break;
-        case "log": stack.push(Math.log10(a)); break;
-        case "ln": stack.push(Math.log(a)); break;
-      }
+  rpn.forEach(t => {
+    if (!isNaN(t)) s.push(+t);
+    else if ("+-*/^".includes(t)) {
+      let b = s.pop(), a = s.pop();
+      s.push(
+        t==="+"?a+b:
+        t==="-"?a-b:
+        t==="*"?a*b:
+        t==="/"?a/b:
+        Math.pow(a,b)
+      );
+    } else {
+      let a = s.pop();
+      s.push(
+        t==="sin"?Math.sin(a*Math.PI/180):
+        t==="cos"?Math.cos(a*Math.PI/180):
+        t==="tan"?Math.tan(a*Math.PI/180):
+        t==="sqrt"?Math.sqrt(a):
+        t==="log"?Math.log10(a):
+        Math.log(a)
+      );
     }
   });
 
-  return stack[0];
+  return s[0];
 }
 </script>
 
