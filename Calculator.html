@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Advanced Scientific Calculator</title>
+  <title>CASIO fx-991EX FINAL</title>
 
   <style>
     body{
@@ -54,7 +54,6 @@
     .frac{
       display:inline-block;
       text-align:center;
-      margin:0 2px;
     }
 
     .box{
@@ -75,7 +74,7 @@
 </head>
 
 <body>
-
+{% include Logo.html %}
 <div class="calc">
 
   <div id="screen"></div>
@@ -100,7 +99,6 @@
     <button onclick="input('ln')">ln</button>
     <button onclick="input('^')">^</button>
 
-    <!-- FRACTION BUTTON -->
     <button id="fracBtn" onclick="fraction()">a/b</button>
 
     <button onclick="input('*')">×</button>
@@ -250,11 +248,16 @@ function render(){
 
     else if(t.type==="mix"){
       out += `
-        <span class="frac">
+        <span style="display:inline-flex;align-items:center;gap:4px;">
+          
           <div class="box">${t.w||0}</div>
-          <div class="box">${t.n||0}</div>
-          <div class="line"></div>
-          <div class="box">${t.d||0}</div>
+
+          <span class="frac">
+            <div class="box">${t.n||0}</div>
+            <div class="line"></div>
+            <div class="box">${t.d||0}</div>
+          </span>
+
         </span>
       `;
     }
