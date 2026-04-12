@@ -19,6 +19,14 @@
       width: 100%;
       max-width: 400px;
       text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    img {
+      width: 160px;
+      margin-bottom: 20px;
     }
 
     .input-box {
@@ -69,8 +77,13 @@
   </style>
 </head>
 <body>
-<div><a href="index.html"><img src="Logo.png" alt="Brendan's Website"></a></div>
   <div class="container">
+    <div>
+      <a href="index.html">
+        <img src="Logo.png" alt="Brendan's Website">
+      </a>
+    </div>
+
     <div class="input-box">
       <input id="numInput" type="number" placeholder="Enter a number" />
       <button onclick="checkNumber()">→</button>
@@ -123,3 +136,4 @@
   </script>
 </body>
 </html>
+
