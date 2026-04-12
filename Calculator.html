@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Casio Style Scientific Calculator</title>
+  <title>Casio Scientific Calculator</title>
 
   <style>
     body {
@@ -17,14 +17,14 @@
       background: #102a54;
       padding: 15px;
       border-radius: 20px;
-      width: 340px;
+      width: 360px;
     }
 
+    /* DISPLAY AREA */
     #display {
       width: 100%;
-      height: 60px;
-      font-size: 22px;
-      text-align: right;
+      min-height: 60px;
+      font-size: 18px;
       padding: 10px;
       margin-bottom: 10px;
       background: #021024;
@@ -41,22 +41,45 @@
 
     button {
       padding: 10px;
-      font-size: 13px;
+      font-size: 12px;
       background: #1e4fa3;
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      transition: 0.1s;
-    }
-
-    button:active {
-      transform: scale(0.95);
     }
 
     .shift { background: #d97b00 !important; }
     .alpha { background: #2e8b57 !important; }
+
+    /* FRACTION UI */
+    .fraction, .mixed {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 2px;
+      font-size: 14px;
+    }
+
+    .fraction input,
+    .mixed input {
+      width: 30px;
+      text-align: center;
+      background: #0a1a33;
+      color: white;
+      border: 1px solid #2d6cdf;
+      border-radius: 4px;
+    }
+
+    .line {
+      width: 100%;
+      height: 2px;
+      background: white;
+      margin: 2px 0;
+    }
+
     .wide { grid-column: span 2; }
+
   </style>
 </head>
 
@@ -64,26 +87,30 @@
 
 <div class="calculator">
 
-  <input id="display" placeholder="0" disabled>
+  <div id="display"></div>
 
   <div class="buttons">
 
-    <button id="shiftBtn" class="shift" onclick="toggleShift()">SHIFT</button>
-    <button id="alphaBtn" class="alpha" onclick="toggleAlpha()">ALPHA</button>
+    <button class="shift" onclick="toggleShift()">SHIFT</button>
+    <button class="alpha" onclick="toggleAlpha()">ALPHA</button>
     <button onclick="clearAll()">AC</button>
     <button onclick="del()">DEL</button>
     <button onclick="append('/')">÷</button>
 
-    <button data-n="sin(" data-s="asin(" onclick="func(this)">sin</button>
-    <button data-n="cos(" data-s="acos(" onclick="func(this)">cos</button>
-    <button data-n="tan(" data-s="atan(" onclick="func(this)">tan</button>
+    <!-- FUNCTIONS (SHIFT VISIBLE) -->
+    <button onclick="appendFunc('sin','asin')">sin/asin</button>
+    <button onclick="appendFunc('cos','acos')">cos/acos</button>
+    <button onclick="appendFunc('tan','atan')">tan/atan</button>
     <button onclick="append('(')">(</button>
     <button onclick="append(')')">)</button>
 
     <button onclick="append('log(')">log</button>
     <button onclick="append('ln(')">ln</button>
     <button onclick="append('^')">^</button>
-    <button onclick="append('/')">a/b</button>
+
+    <!-- FRACTION -->
+    <button onclick="addFraction()">a/b</button>
+
     <button onclick="append('*')">×</button>
 
     <button onclick="append('7')">7</button>
@@ -99,9 +126,9 @@
     <button onclick="append('pi')">π</button>
 
     <!-- ALPHA KEYS -->
-    <button data-n="1" data-a="x" onclick="alphaKey(this)">1</button>
-    <button data-n="2" data-a="y" onclick="alphaKey(this)">2</button>
-    <button data-n="3" data-a="z" onclick="alphaKey(this)">3</button>
+    <button onclick="appendAlpha('1','x')">1</button>
+    <button onclick="appendAlpha('2','y')">2</button>
+    <button onclick="appendAlpha('3','z')">3</button>
 
     <button onclick="append('.')">.</button>
     <button onclick="append('0')">0</button>
@@ -124,43 +151,62 @@ let alpha = false;
 
 function toggleShift() {
   shift = !shift;
-  document.getElementById("shiftBtn").style.opacity = shift ? "0.6" : "1";
 }
 
 function toggleAlpha() {
   alpha = !alpha;
-  document.getElementById("alphaBtn").style.opacity = alpha ? "0.6" : "1";
-  renderAlphaKeys();
 }
 
 /* =========================
-   DYNAMIC ALPHA KEYS
-========================= */
-
-function renderAlphaKeys() {
-  document.querySelectorAll("button[data-n]").forEach(btn => {
-    btn.innerText = alpha ? btn.dataset.a : btn.dataset.n;
-  });
-}
-
-/* =========================
-   INPUT FUNCTIONS
+   BASIC INPUT
 ========================= */
 
 function append(val) {
-  display.value += val;
+  display.innerHTML += val;
 }
 
-function alphaKey(btn) {
-  display.value += alpha ? btn.dataset.a : btn.dataset.n;
+function appendAlpha(num, letter) {
+  display.innerHTML += alpha ? letter : num;
 }
 
-/* SHIFT FUNCTIONS */
-function func(btn) {
-  let val = shift ? btn.dataset.s : btn.dataset.n;
-  display.value += val;
+/* =========================
+   SHIFT FUNCTION BUTTONS
+========================= */
+
+function appendFunc(normal, shifted) {
+  display.innerHTML += shift ? shifted + "(" : normal + "(";
   shift = false;
-  document.getElementById("shiftBtn").style.opacity = "1";
+}
+
+/* =========================
+   CASIO FRACTION (a/b)
+========================= */
+
+function addFraction() {
+
+  if (shift) {
+    // MIXED NUMBER TEMPLATE
+    display.innerHTML += `
+      <span class="mixed">
+        <input placeholder="w">
+        <div class="fraction">
+          <input placeholder="a">
+          <div class="line"></div>
+          <input placeholder="b">
+        </div>
+      </span>
+    `;
+    shift = false;
+  } else {
+    // NORMAL FRACTION
+    display.innerHTML += `
+      <span class="fraction">
+        <input placeholder="a">
+        <div class="line"></div>
+        <input placeholder="b">
+      </span>
+    `;
+  }
 }
 
 /* =========================
@@ -168,118 +214,26 @@ function func(btn) {
 ========================= */
 
 function clearAll() {
-  display.value = "";
+  display.innerHTML = "";
 }
 
 function del() {
-  display.value = display.value.slice(0, -1);
+  display.innerHTML = display.innerHTML.slice(0, -1);
 }
 
 /* =========================
-   CALCULATE
+   SIMPLE CALCULATE (basic fallback)
 ========================= */
 
 function calculate() {
   try {
-    display.value = evaluate(display.value);
-  } catch (e) {
-    display.value = "Error";
+    let expr = display.innerText
+      .replace(/pi/g, Math.PI);
+
+    display.innerHTML = eval(expr);
+  } catch {
+    display.innerHTML = "Error";
   }
-}
-
-/* =========================
-   PARSER
-========================= */
-
-function evaluate(expr) {
-
-  expr = expr.replace(/\bpi\b/g, Math.PI);
-
-  let tokens = expr.match(/asin|acos|atan|sin|cos|tan|sqrt|log|ln|\d*\.?\d+|[a-z]+|[+\-*/^()]/g);
-
-  let rpn = toRPN(tokens);
-  return evalRPN(rpn);
-}
-
-function toRPN(tokens) {
-  let out = [], ops = [];
-  let prec = {"+":1,"-":1,"*":2,"/":2,"^":3};
-
-  const isFunc = t => /^[a-z]+$/.test(t);
-
-  tokens.forEach(t => {
-    if (!isNaN(t)) out.push(t);
-
-    else if (isFunc(t)) ops.push(t);
-
-    else if (t === "(") ops.push(t);
-
-    else if (t === ")") {
-      while (ops.length && ops.at(-1) !== "(") {
-        out.push(ops.pop());
-      }
-      ops.pop();
-
-      if (ops.length && isFunc(ops.at(-1))) {
-        out.push(ops.pop());
-      }
-    }
-
-    else {
-      while (
-        ops.length &&
-        prec[ops.at(-1)] >= prec[t] &&
-        t !== "^"
-      ) {
-        out.push(ops.pop());
-      }
-      ops.push(t);
-    }
-  });
-
-  while (ops.length) out.push(ops.pop());
-
-  return out;
-}
-
-function evalRPN(rpn) {
-  let s = [];
-
-  rpn.forEach(t => {
-
-    if (!isNaN(t)) s.push(+t);
-
-    else if ("+-*/^".includes(t)) {
-      let b = s.pop(), a = s.pop();
-
-      s.push(
-        t==="+" ? a+b :
-        t==="-" ? a-b :
-        t==="*" ? a*b :
-        t==="/" ? a/b :
-        Math.pow(a,b)
-      );
-    }
-
-    else {
-      let a = s.pop();
-
-      s.push(
-        t==="sin" ? Math.sin(a*Math.PI/180) :
-        t==="cos" ? Math.cos(a*Math.PI/180) :
-        t==="tan" ? Math.tan(a*Math.PI/180) :
-        t==="asin" ? Math.asin(a)*180/Math.PI :
-        t==="acos" ? Math.acos(a)*180/Math.PI :
-        t==="atan" ? Math.atan(a)*180/Math.PI :
-        t==="sqrt" ? Math.sqrt(a) :
-        t==="log" ? Math.log10(a) :
-        t==="ln" ? Math.log(a) :
-        0
-      );
-    }
-  });
-
-  return s[0];
 }
 
 </script>
