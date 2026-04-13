@@ -54,7 +54,10 @@
 </head>
 
 <body>
-
+  <div class="logo">
+    <a href="index.html">
+      <img src="Logo.png" alt="Brendan's Website">
+    </a>
 <h1>📏 Distance & Speed Converter</h1>
 
 <div class="card">
