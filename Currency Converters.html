@@ -16,6 +16,25 @@
       color: black;
     }
 
+    .header {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    input {
+      padding: 8px;
+      font-size: 14px;
+      width: 100px;
+    }
+
+    button {
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -38,31 +57,9 @@
       font-weight: bold;
     }
 
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-
-    button {
-      padding: 8px 12px;
-      cursor: pointer;
-    }
-
-    .change-up {
-      color: #22c55e;
-      font-weight: bold;
-    }
-
-    .change-down {
-      color: #ef4444;
-      font-weight: bold;
-    }
-
-    .change-flat {
-      color: #94a3b8;
-    }
+    .change-up { color: #22c55e; font-weight: bold; }
+    .change-down { color: #ef4444; font-weight: bold; }
+    .change-flat { color: #94a3b8; }
   </style>
 </head>
 
@@ -71,9 +68,12 @@
     <a href="index.html">
       <img src="Logo.png" alt="Brendan's Website">
     </a>
+<h1>🌍 Live FX World Dashboard</h1>
+
 <div class="header">
-  <h1>🌍 Live FX World Dashboard (AUD Base)</h1>
-  <button onclick="loadRates()">Refresh Now</button>
+  <label>Base Currency:</label>
+  <input id="baseInput" value="USD" maxlength="3">
+  <button onclick="loadRates()">Load</button>
 </div>
 
 <table>
@@ -92,7 +92,9 @@ let oldRates = null;
 
 async function loadRates() {
   try {
-    const res = await fetch("https://open.er-api.com/v6/latest/AUD");
+    const base = document.getElementById("baseInput").value.toUpperCase();
+
+    const res = await fetch("https://open.er-api.com/v6/latest/" + base);
     const data = await res.json();
 
     const rates = data.rates;
@@ -138,8 +140,10 @@ async function loadRates() {
   }
 }
 
+// initial load
 loadRates();
-setTimeout(loadRates, 2000);
+
+// refresh every 30 seconds
 setInterval(loadRates, 30000);
 </script>
 
