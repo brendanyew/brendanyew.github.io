@@ -87,7 +87,7 @@ let oldRates = null;
 
 async function loadRates() {
   try {
-    const res = await fetch("https://open.er-api.com/v6/latest/USD");
+    const res = await fetch("https://open.er-api.com/v6/latest/AUD");
     const data = await res.json();
 
     const rates = data.rates;
