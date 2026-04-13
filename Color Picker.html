@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Color Picker</title>
+</head>
+<body style="background-color: white; font-family: Arial; text-align: center; padding-top: 50px;">
+
+  <h2>Enter a HEX Color</h2>
+  <input type="text" id="colorInput" placeholder="#FFFFFF" />
+  <button onclick="getColorName()">Check</button>
+
+  <h3 id="result"></h3>
+
+  <script>
+    const colorNames = {
+      "#000000": "Black",
+      "#FFFFFF": "White",
+      "#FF0000": "Red",
+      "#00FF00": "Lime",
+      "#0000FF": "Blue",
+      "#FFFF00": "Yellow",
+      "#FFA500": "Orange",
+      "#800080": "Purple",
+      "#FFC0CB": "Pink",
+      "#A52A2A": "Brown",
+      "#808080": "Gray"
+    };
+
+    function getColorName() {
+      let input = document.getElementById("colorInput").value.toUpperCase();
+      let result = document.getElementById("result");
+
+      // Validate HEX
+      if (!input.startsWith("#") || input.length !== 7) {
+        result.textContent = "Invalid HEX code";
+        result.style.color = "black";
+        return;
+      }
+
+      let name = colorNames[input];
+
+      // If not found, use HEX as the label
+      if (!name) {
+        name = input;
+      }
+
+      result.textContent = name;
+
+      // Special case for white
+      if (input === "#FFFFFF") {
+        result.style.color = "black";
+      } else {
+        result.style.color = input;
+      }
+    }
+  </script>
+
+</body>
+</html>
