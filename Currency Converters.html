@@ -5,23 +5,29 @@
   <style>
     body {
       font-family: Arial;
-      background: #0f172a;
-      color: white;
+      background: white;
+      color: black;
       margin: 0;
       padding: 20px;
     }
 
-    h1 { margin-bottom: 10px; }
+    h1 {
+      margin-bottom: 10px;
+      color: black;
+    }
 
     table {
       width: 100%;
       border-collapse: collapse;
+      background: #0f172a;
+      color: white;
     }
 
     th, td {
       padding: 10px;
       text-align: left;
       border-bottom: 1px solid #334155;
+      color: white;
     }
 
     .up { background: rgba(34,197,94,0.2); }
@@ -44,7 +50,6 @@
       cursor: pointer;
     }
 
-    /* 🔥 NEW: change colors */
     .change-up {
       color: #22c55e;
       font-weight: bold;
@@ -133,13 +138,8 @@ async function loadRates() {
   }
 }
 
-// first load
 loadRates();
-
-// quick second load so colors appear fast
 setTimeout(loadRates, 2000);
-
-// refresh every 30s
 setInterval(loadRates, 30000);
 </script>
 
