@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Weather App</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #f5f5f5;
+    }
+
+    input {
+      padding: 10px;
+      width: 260px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin: 10px;
+    }
+
+    button {
+      padding: 10px 15px;
+      margin: 5px;
+      border: none;
+      background: #333;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    #temp {
+      font-size: 48px;
+      margin: 20px;
+    }
+
+    .forecast {
+      display: flex;
+      overflow-x: auto;
+      gap: 10px;
+      padding: 10px;
+      justify-content: center;
+    }
+
+    .card {
+      padding: 10px;
+      background: white;
+      border-radius: 12px;
+      min-width: 100px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    /* 14-day vertical layout */
+    #daily {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #daily .card {
+      width: 220px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+<div class="logo">
+    <a href="index.html">
+      <img src="Logo.png" alt="Brendan's Website">
+    </a>
+<h1>Weather App</h1>
+
+<input id="locationInput" placeholder="Enter city (e.g. Singapore)">
+<br>
+
+<button onclick="getWeather()">Search</button>
+<button onclick="getMyLocation()">📍 Use My Location</button>
+
+<div id="current"></div>
+
+<h2>Hourly Forecast</h2>
+<div id="hourly" class="forecast"></div>
+
+<h2>14-Day Forecast</h2>
+<div id="daily"></div>
+
+<script>
+
+// 🌡️ Temperature color
+function getTempColor(temp) {
+  if (temp <= 0) return "#00f";
+  if (temp >= 35) return "#f00";
+
+  const ratio = (temp + 10) / 50;
+  const r = Math.floor(255 * ratio);
+  const b = Math.floor(255 * (1 - ratio));
+
+  return `rgb(${r},0,${b})`;
+}
+
+//////////////////////////////////////////////////////
+// 🌦️ CLEAN SINGLE ICON SYSTEM (FIXED)
+//////////////////////////////////////////////////////
+
+// current + daily icons
+function getWeatherIcon(code) {
+  if (code === 0) return "☀️";
+  if ([1,2,3].includes(code)) return "☁️";
+  if ([45,48].includes(code)) return "🌫️";
+  if ([51,53,55].includes(code)) return "🌦️";
+  if ([61,63,65].includes(code)) return "🌧️";
+  if ([71,73,75].includes(code)) return "❄️";
+  if ([95].includes(code)) return "⛈️";
+  return "☁️";
+}
+
+// hourly icons (NO combined emojis)
+function getSmartHourlyIcon(code, hour) {
+  const isNight = (hour >= 19 || hour <= 6);
+
+  if (code === 0) return isNight ? "🌙" : "☀️";
+  if ([1,2,3].includes(code)) return "☁️";
+  if ([45,48].includes(code)) return "🌫️";
+  if ([51,53,55].includes(code)) return "🌦️";
+  if ([61,63,65].includes(code)) return "🌧️";
+  if ([71,73,75].includes(code)) return "❄️";
+  if ([95].includes(code)) return "⛈️";
+
+  return isNight ? "🌙" : "☀️";
+}
+
+//////////////////////////////////////////////////////
+// 🔍 SEARCH
+//////////////////////////////////////////////////////
+async function getWeather() {
+  let location = document.getElementById("locationInput").value.trim();
+
+  if (!location) {
+    alert("Enter a location");
+    return;
+  }
+
+  const geoRes = await fetch(
+    `https://geocoding-api.open-meteo.com/v1/search?name=${location}&count=1`
+  );
+  const geoData = await geoRes.json();
+
+  if (!geoData.results) {
+    alert("Location not found");
+    return;
+  }
+
+  const place = geoData.results[0];
+  fetchWeather(place.latitude, place.longitude, place);
+}
+
+//////////////////////////////////////////////////////
+// 📍 GPS
+//////////////////////////////////////////////////////
+function getMyLocation() {
+  if (!navigator.geolocation) {
+    alert("Geolocation not supported");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+
+      const geoRes = await fetch(
+        `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}`
+      );
+      const geoData = await geoRes.json();
+
+      const place = geoData.results ? geoData.results[0] : {
+        name: "Your Location",
+        country: ""
+      };
+
+      fetchWeather(lat, lon, place);
+    },
+    () => alert("Location access denied")
+  );
+}
+
+//////////////////////////////////////////////////////
+// 🌦️ FETCH WEATHER
+//////////////////////////////////////////////////////
+async function fetchWeather(lat, lon, place) {
+  const res = await fetch(
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weathercode&hourly=temperature_2m,weathercode&daily=temperature_2m_max,temperature_2m_min,weathercode&forecast_days=14&timezone=auto`
+  );
+
+  const data = await res.json();
+
+  displayCurrent(data, place);
+  displayHourly(data);
+  displayDaily(data);
+}
+
+//////////////////////////////////////////////////////
+// 📍 CURRENT
+//////////////////////////////////////////////////////
+function displayCurrent(data, place) {
+  const temp = data.current.temperature_2m;
+  const code = data.current.weathercode;
+
+  const color = getTempColor(temp);
+  const icon = getWeatherIcon(code);
+
+  document.getElementById("current").innerHTML = `
+    <h2>${place.name}, ${place.country}</h2>
+    <div style="font-size:40px">${icon}</div>
+    <div id="temp" style="color:${color}">
+      ${temp}°C
+    </div>
+  `;
+}
+
+//////////////////////////////////////////////////////
+// ⏱️ HOURLY (FIXED CLEAN ICONS)
+//////////////////////////////////////////////////////
+function displayHourly(data) {
+  const container = document.getElementById("hourly");
+  container.innerHTML = "";
+
+  for (let i = 0; i < 24; i++) {
+    const timeStr = data.hourly.time[i].split("T")[1];
+    const hour = parseInt(timeStr.split(":")[0]);
+
+    const temp = data.hourly.temperature_2m[i];
+    const code = data.hourly.weathercode[i];
+
+    const icon = getSmartHourlyIcon(code, hour);
+
+    container.innerHTML += `
+      <div class="card">
+        <div>${timeStr}</div>
+        <div style="font-size:26px">${icon}</div>
+        <div>${temp}°C</div>
+      </div>
+    `;
+  }
+}
+
+//////////////////////////////////////////////////////
+// 📅 DAILY (VERTICAL)
+//////////////////////////////////////////////////////
+function displayDaily(data) {
+  const container = document.getElementById("daily");
+  container.innerHTML = "";
+
+  for (let i = 0; i < data.daily.time.length; i++) {
+    const icon = getWeatherIcon(data.daily.weathercode[i]);
+
+    container.innerHTML += `
+      <div class="card">
+        <div>${data.daily.time[i]}</div>
+        <div style="font-size:24px">${icon}</div>
+
+        <div style="color:#ff7b7b; font-weight:bold;">
+          MAX: ${data.daily.temperature_2m_max[i]}°C
+        </div>
+
+        <div style="color:#4dabf7; font-weight:bold;">
+          MIN: ${data.daily.temperature_2m_min[i]}°C
+        </div>
+      </div>
+    `;
+  }
+}
+
+</script>
+
+</body>
+</html>
