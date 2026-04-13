@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Temperature Converter</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 50px;
+  }
+
+  .row {
+    margin: 15px;
+  }
+
+  input {
+    font-size: 20px;
+    padding: 10px;
+    width: 120px;
+    text-align: center;
+  }
+
+  button {
+    font-size: 18px;
+    padding: 10px 15px;
+    margin-left: 10px;
+    cursor: pointer;
+  }
+
+  .temp {
+    font-size: 40px;
+    font-weight: bold;
+    margin-top: 20px;
+    transition: color 0.3s ease;
+  }
+</style>
+</head>
+<body>
+
+<h1>Temperature Converter</h1>
+
+<div class="row">
+  <input id="celsius" type="number" placeholder="°C">
+  <button onclick="convertFromC()">Convert</button>
+</div>
+
+<div class="row">
+  <input id="fahrenheit" type="number" placeholder="°F">
+  <button onclick="convertFromF()">Convert</button>
+</div>
+
+<div class="temp" id="output">--</div>
+
+<script>
+const cInput = document.getElementById("celsius");
+const fInput = document.getElementById("fahrenheit");
+const output = document.getElementById("output");
+
+// Celsius → Fahrenheit
+function convertFromC() {
+  let c = parseFloat(cInput.value);
+  if (!isNaN(c)) {
+    let f = (c * 9/5) + 32;
+    fInput.value = f.toFixed(2);
+    updateColor(c);
+    output.textContent = `${c.toFixed(2)}°C = ${f.toFixed(2)}°F`;
+  }
+}
+
+// Fahrenheit → Celsius
+function convertFromF() {
+  let f = parseFloat(fInput.value);
+  if (!isNaN(f)) {
+    let c = (f - 32) * 5/9;
+    cInput.value = c.toFixed(2);
+    updateColor(c);
+    output.textContent = `${c.toFixed(2)}°C = ${f.toFixed(2)}°F`;
+  }
+}
+
+// Allow Enter key
+cInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") convertFromC();
+});
+
+fInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") convertFromF();
+});
+
+// Color logic
+function updateColor(celsius) {
+  let min = -20;
+  let max = 40;
+  let ratio = (celsius - min) / (max - min);
+  ratio = Math.max(0, Math.min(1, ratio));
+
+  let red = Math.floor(255 * ratio);
+  let blue = Math.floor(255 * (1 - ratio));
+  let green = 50;
+
+  let color = `rgb(${red}, ${green}, ${blue})`;
+  output.style.color = color;
+}
+</script>
+
+</body>
+</html>
