@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Weight Converter</title>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: white;
+    text-align: center;
+    padding: 50px;
+  }
+
+  .card {
+    width: 320px;
+    margin: auto;
+    padding: 20px;
+  }
+
+  h1 {
+    margin-bottom: 20px;
+  }
+
+  input {
+    width: 130px;
+    padding: 10px;
+    margin: 6px;
+    font-size: 16px;
+    text-align: center;
+  }
+
+  button {
+    margin-top: 15px;
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  .output {
+    margin-top: 20px;
+    font-size: 22px;
+    font-weight: bold;
+    transition: color 0.3s ease;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h1>⚖️ Weight Converter</h1>
+
+  <input id="lb" type="number" placeholder="Pounds (lb)">
+  <input id="kg" type="number" placeholder="Kilograms (kg)">
+
+  <br>
+
+  <button onclick="convertWeight()">Convert</button>
+
+  <div id="out" class="output">---</div>
+</div>
+
+<script>
+function convertWeight() {
+  let lb = document.getElementById("lb").value;
+  let kg = document.getElementById("kg").value;
+  let out = document.getElementById("out");
+
+  let kgValue;
+
+  // lb → kg
+  if (lb !== "") {
+    kgValue = lb * 0.453592;
+    document.getElementById("kg").value = kgValue.toFixed(2);
+    out.textContent = `${lb} lb = ${kgValue.toFixed(2)} kg`;
+  }
+
+  // kg → lb
+  else if (kg !== "") {
+    kgValue = kg;
+    let lbValue = kg / 0.453592;
+    document.getElementById("lb").value = lbValue.toFixed(2);
+    out.textContent = `${kg} kg = ${lbValue.toFixed(2)} lb`;
+  }
+
+  if (!kgValue) return;
+
+  updateColor(kgValue);
+}
+
+// 🟢 GREEN → 🔴 RED (0 kg starts green)
+function updateColor(kg) {
+  let min = 0;
+  let max = 150;
+
+  let ratio = (kg - min) / (max - min);
+  ratio = Math.max(0, Math.min(1, ratio));
+
+  let r = Math.floor(255 * ratio);
+  let g = Math.floor(255 * (1 - ratio));
+  let b = 0;
+
+  document.getElementById("out").style.color = `rgb(${r}, ${g}, ${b})`;
+}
+</script>
+
+</body>
+</html>
