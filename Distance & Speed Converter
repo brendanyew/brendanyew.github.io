@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Distance & Speed Converter</title>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f5f7fb;
+    margin: 0;
+    padding: 40px;
+    text-align: center;
+  }
+
+  h1 {
+    margin-bottom: 25px;
+  }
+
+  .card {
+    background: white;
+    width: 380px;
+    margin: 20px auto;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  }
+
+  h3 {
+    margin-top: 15px;
+  }
+
+  input {
+    width: 140px;
+    padding: 10px;
+    margin: 6px;
+    font-size: 16px;
+    text-align: center;
+  }
+
+  button {
+    margin-top: 10px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .output {
+    margin-top: 10px;
+    font-size: 18px;
+    font-weight: bold;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>📏 Distance & Speed Converter</h1>
+
+<div class="card">
+
+  <!-- Miles / KM -->
+  <h3>Miles ⇄ Kilometers</h3>
+  <input id="mi" type="number" placeholder="Miles">
+  <input id="km" type="number" placeholder="Km">
+  <br>
+  <button onclick="convertMiles()">Convert</button>
+  <div id="out1" class="output">---</div>
+
+  <hr>
+
+  <!-- Feet / Meters -->
+  <h3>Feet ⇄ Meters</h3>
+  <input id="ft" type="number" placeholder="Feet">
+  <input id="m" type="number" placeholder="Meters">
+  <br>
+  <button onclick="convertFeet()">Convert</button>
+  <div id="out2" class="output">---</div>
+
+  <hr>
+
+  <!-- Knots / kmh -->
+  <h3>Knots ⇄ km/h</h3>
+  <input id="kt" type="number" placeholder="Knots">
+  <input id="kph" type="number" placeholder="km/h">
+  <br>
+  <button onclick="convertSpeed()">Convert</button>
+  <div id="out3" class="output">---</div>
+
+</div>
+
+<script>
+// ---------------- Miles / Km ----------------
+function convertMiles() {
+  let mi = document.getElementById("mi").value;
+  let km = document.getElementById("km").value;
+  let out = document.getElementById("out1");
+
+  if (mi !== "") {
+    let kmVal = mi * 1.60934;
+    document.getElementById("km").value = kmVal.toFixed(2);
+    out.textContent = `${mi} miles = ${kmVal.toFixed(2)} km`;
+  }
+
+  if (km !== "") {
+    let miVal = km / 1.60934;
+    document.getElementById("mi").value = miVal.toFixed(2);
+    out.textContent = `${km} km = ${miVal.toFixed(2)} miles`;
+  }
+}
+
+// ---------------- Feet / Meters ----------------
+function convertFeet() {
+  let ft = document.getElementById("ft").value;
+  let m = document.getElementById("m").value;
+  let out = document.getElementById("out2");
+
+  if (ft !== "") {
+    let mVal = ft * 0.3048;
+    document.getElementById("m").value = mVal.toFixed(2);
+    out.textContent = `${ft} ft = ${mVal.toFixed(2)} m`;
+  }
+
+  if (m !== "") {
+    let ftVal = m / 0.3048;
+    document.getElementById("ft").value = ftVal.toFixed(2);
+    out.textContent = `${m} m = ${ftVal.toFixed(2)} ft`;
+  }
+}
+
+// ---------------- Knots / kmh ----------------
+function convertSpeed() {
+  let kt = document.getElementById("kt").value;
+  let kph = document.getElementById("kph").value;
+  let out = document.getElementById("out3");
+
+  if (kt !== "") {
+    let kphVal = kt * 1.852;
+    document.getElementById("kph").value = kphVal.toFixed(2);
+    out.textContent = `${kt} knots = ${kphVal.toFixed(2)} km/h`;
+  }
+
+  if (kph !== "") {
+    let ktVal = kph / 1.852;
+    document.getElementById("kt").value = ktVal.toFixed(2);
+    out.textContent = `${kph} km/h = ${ktVal.toFixed(2)} knots`;
+  }
+}
+</script>
+
+</body>
+</html>
