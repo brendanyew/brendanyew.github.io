@@ -3,24 +3,61 @@
 <title>Brendan's Website</title>
   <style>
     body {
-  background-color: white;
-}
+      background-color: white;
+    }
 
-h1 {
-  color: white;
-  text-align: center;
-}
+    h1 {
+      color: white;
+      text-align: center;
+    }
 
-p {
-  font-family: verdana;
-  font-size: 20px;
-}
+    p {
+      font-family: verdana;
+      font-size: 20px;
+    }
+
+    /* ✨ NEW: Coming soon animation */
+    .coming-soon {
+      font-family: Arial, sans-serif;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .star {
+      font-size: 22px;
+      animation: flashColors 1.2s infinite, pulse 1.2s infinite;
+      text-shadow: 0 0 8px currentColor;
+    }
+
+    @keyframes flashColors {
+      0%   { color: #ff4da6; }
+      33%  { color: #a64dff; }
+      66%  { color: #4da6ff; }
+      100% { color: #ff4da6; }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+    }
   </style>
 </head>
+
 <body>
 <a href="index.html"><img src="Logo.png" alt="Brendan's Website"></a>
 <hr>
+
+<!-- ✨ NEW: Animated star message -->
+<div class="coming-soon">
+  <span class="star">✦</span>
+  <span>Brendan's Website's AI is Coming Soon!</span>
+</div>
+
 <p>Recommended things to do: Click that random button, or click any of the links below. Our goal is to make lots of extra pages of Brendan's Website! Other pages coming sooner or later </p>
+
 <iframe width="110" height="200" src="https://www.myinstants.com/instant/discord-leave-noise-46083/embed/" frameborder="0" scrolling="no"></iframe>
 </br>
 <a href="Converter.html">_Folder 1: Converters</a>
@@ -51,5 +88,6 @@ p {
 </br>
 </br>
 <a href="https://www.w3schools.com/html">Learn Coding and how to create a custom website like this (To go back to Brendan's Website, press the back arrow)</a>
+
 </body>
 </html>
