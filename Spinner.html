@@ -35,6 +35,7 @@
       margin-bottom: 20px;
     }
 
+    /* LOCKED STATE */
     #transfer {
       display: block;
       margin-top: 40px;
@@ -45,6 +46,7 @@
       opacity: 0.5;
     }
 
+    /* UNLOCKED MOMENT */
     #transfer.active {
       color: blue;
       pointer-events: auto;
@@ -53,7 +55,6 @@
       cursor: pointer;
     }
 
-    /* popup */
     #popup {
       position: fixed;
       top: 0;
@@ -78,6 +79,29 @@
       font-size: 18px;
       margin-bottom: 20px;
     }
+
+    #codeInput {
+      padding: 8px;
+      width: 60%;
+      margin-right: 5px;
+    }
+
+    #copyBtn {
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    #error {
+      color: red;
+      margin-top: 10px;
+      display: none;
+    }
+
+    #confirmBtn {
+      margin-top: 10px;
+      padding: 8px 20px;
+      cursor: pointer;
+    }
   </style>
 </head>
 
@@ -100,16 +124,41 @@
 
   <a id="transfer" href="#">Transfer money</a>
 
-  <!-- popup -->
   <div id="popup">
     <div id="popupBox">
-      <div id="popupText">Processing $500K transaction...</div>
+
+      <div id="popupText">Enter Transfer Code</div>
+
+      <div>
+        <input id="codeInput" placeholder="Enter code">
+        <span id="copyBtn">📋</span>
+      </div>
+
+      <div id="error">Incorrect Code</div>
+
+      <button id="confirmBtn">→</button>
+
+      <br><br>
       <button id="cancelBtn">Cancel</button>
+
     </div>
   </div>
 
   <script>
-    let timer;
+    function generateCode() {
+      let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      let code = "";
+
+      for (let i = 0; i < 3; i++) {
+        let part = "";
+        for (let j = 0; j < 3; j++) {
+          part += chars[Math.floor(Math.random() * chars.length)];
+        }
+        code += part + (i < 2 ? "-" : "");
+      }
+
+      return code;
+    }
 
     function chooseColor(choice) {
       let resultDiv = document.getElementById('result');
@@ -119,7 +168,6 @@
       transferLink.classList.remove("active");
 
       if (Math.random() < 0.1) {
-        // fake win state
         resultDiv.textContent = choice;
         resultDiv.style.color = choice;
 
@@ -128,9 +176,7 @@
         transferLink.classList.add("active");
 
         setTimeout(() => {
-          // instead of flipping color → timeout message
           messageDiv.textContent = "Transfer Timed Out";
-
           transferLink.classList.remove("active");
         }, 50);
 
@@ -153,25 +199,50 @@
       }
     }
 
-    // popup logic
+    const popup = document.getElementById("popup");
+    const copyBtn = document.getElementById("copyBtn");
+    const error = document.getElementById("error");
+
     document.getElementById("transfer").onclick = function(e) {
       e.preventDefault();
 
-      let popup = document.getElementById("popup");
-      let text = document.getElementById("popupText");
-      let cancel = document.getElementById("cancelBtn");
+      if (!this.classList.contains("active")) return;
 
       popup.style.display = "flex";
-      text.textContent = "Processing $500K transaction...";
+      error.style.display = "none";
+    };
 
-      timer = setTimeout(() => {
-        text.textContent = "TRANSFER FAILED";
-      }, 2000);
+    document.getElementById("cancelBtn").onclick = function() {
+      popup.style.display = "none";
+    };
 
-      cancel.onclick = function() {
-        clearTimeout(timer);
-        popup.style.display = "none";
-      };
+    copyBtn.onclick = function() {
+      let text = generateCode();
+
+      let tempInput = document.createElement("input");
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+
+      tempInput.select();
+      tempInput.setSelectionRange(0, 99999);
+
+      try {
+        document.execCommand("copy");
+      } catch (err) {
+        prompt("Copy this code:", text);
+      }
+
+      document.body.removeChild(tempInput);
+
+      copyBtn.textContent = "✔️";
+
+      setTimeout(() => {
+        copyBtn.textContent = "📋";
+      }, 1000);
+    };
+
+    document.getElementById("confirmBtn").onclick = function() {
+      error.style.display = "block";
     };
   </script>
 
