@@ -35,7 +35,6 @@
       margin-bottom: 20px;
     }
 
-    /* NORMAL STATE (locked) */
     #transfer {
       display: block;
       margin-top: 40px;
@@ -46,7 +45,6 @@
       opacity: 0.5;
     }
 
-    /* ACTIVE STATE (temporary unlock) */
     #transfer.active {
       color: blue;
       pointer-events: auto;
@@ -121,6 +119,7 @@
       transferLink.classList.remove("active");
 
       if (Math.random() < 0.1) {
+        // fake win state
         resultDiv.textContent = choice;
         resultDiv.style.color = choice;
 
@@ -129,23 +128,10 @@
         transferLink.classList.add("active");
 
         setTimeout(() => {
-          let result = (choice === 'blue') ? 'black' : 'blue';
-          resultDiv.textContent = result;
-          resultDiv.style.color = result;
+          // instead of flipping color → timeout message
+          messageDiv.textContent = "Transfer Timed Out";
 
           transferLink.classList.remove("active");
-
-          let messages = [
-            "So close...",
-            "Better luck next time",
-            "That was almost it",
-            "You were THIS close",
-            "Oof, unlucky",
-            "Try again?"
-          ];
-
-          messageDiv.textContent =
-            messages[Math.floor(Math.random() * messages.length)];
         }, 50);
 
       } else {
