@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Restricted Page</title>
+
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at top, #0f172a, #020617);
+    font-family: Arial, sans-serif;
+    color: #e2e8f0;
+  }
+
+  .card {
+    width: 420px;
+    padding: 40px;
+    border-radius: 16px;
+    text-align: center;
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .icon {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .icon svg {
+    display: block;
+    filter: drop-shadow(0 10px 25px rgba(0,0,0,0.6));
+  }
+
+  h2 {
+    margin: 10px 0;
+    font-size: 26px;
+  }
+
+  p {
+    color: #94a3b8;
+    margin-bottom: 20px;
+  }
+
+  button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  button:hover {
+    transform: translateY(-2px);
+  }
+
+  .message {
+    margin-top: 20px;
+    font-size: 15px;
+    color: #94a3b8;
+  }
+
+  .secret {
+    margin-top: 25px;
+    font-size: 13px;
+    color: #64748b;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+
+  .secret.show {
+    opacity: 0.6;
+  }
+
+  .hidden {
+    display: none;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+  <div class="icon">
+    <!-- LOCK -->
+    <svg id="lockIcon" width="70" height="70" viewBox="0 0 24 24">
+      <rect x="5" y="10" width="14" height="10" rx="2" fill="#cbd5f5"/>
+      <path d="M8 10V7a4 4 0 118 0v3" stroke="#cbd5f5" stroke-width="2"/>
+    </svg>
+
+    <!-- PAPER PLANE -->
+    <svg id="planeIcon" width="80" height="80" viewBox="0 0 24 24" style="display:none;">
+      <path d="M2 12L22 2L13 22L11 13L2 12Z" fill="#e2e8f0"/>
+    </svg>
+  </div>
+
+  <h2 id="title">This page is restricted.</h2>
+  <p id="desc">If you want to use it, contact your system administrator.</p>
+
+  <button id="requestBtn">Ask Now</button>
+
+  <div class="message hidden" id="statusMsg"></div>
+
+  <!-- SUBTLE SECRET -->
+  <div class="secret" id="secretMsg">
+    https://brendanyew.com/Restricted Webpage.html
+  </div>
+
+</div>
+
+<script>
+  const button = document.getElementById("requestBtn");
+  const message = document.getElementById("statusMsg");
+  const lockIcon = document.getElementById("lockIcon");
+  const planeIcon = document.getElementById("planeIcon");
+  const title = document.getElementById("title");
+  const desc = document.getElementById("desc");
+  const secret = document.getElementById("secretMsg");
+
+  button.addEventListener("click", () => {
+    button.style.display = "none";
+
+    lockIcon.style.display = "none";
+    planeIcon.style.display = "block";
+
+    title.innerText = "Request Sent";
+    desc.innerText = "";
+
+    message.classList.remove("hidden");
+    message.innerText =
+      "Once your system administrator approves your request, you can reload the page to access the website.";
+
+    setTimeout(() => {
+      secret.classList.add("show");
+    }, 1200);
+  });
+</script>
+
+</body>
+</html>
