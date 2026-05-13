@@ -1,0 +1,66 @@
+<html>
+<head>
+<title>Brendan's Website</title>
+  <style>
+    body {
+      background-color: white;
+    }
+
+    h1 {
+      color: white;
+      text-align: center;
+    }
+
+    p {
+      font-family: verdana;
+      font-size: 20px;
+    }
+
+    /* ✨ NEW: Coming soon animation */
+    .coming-soon {
+      font-family: Arial, sans-serif;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .star {
+      font-size: 22px;
+      animation: flashColors 1.2s infinite, pulse 1.2s infinite;
+      text-shadow: 0 0 8px currentColor;
+    }
+
+    @keyframes flashColors {
+      0%   { color: #ff4da6; }
+      33%  { color: #a64dff; }
+      66%  { color: #4da6ff; }
+      100% { color: #ff4da6; }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+    }
+  </style>
+</head>
+
+<body>
+<a href="index.html"><img src="Logo.png" alt="Brendan's Website"></a>
+<hr>
+
+<!-- ✨ NEW: Animated star message -->
+<div class="coming-soon">
+  <span class="star">✦</span>
+  <span>Brendan's Website AI is coming in 2068</span>
+</div>
+
+<p>Project Information: Stage 1 - Add most games, converters and tools (Estimated completion date: Dec 2025 [COMPLETED]). 
+  Stage 2 - Finish every feature, and also add lots more pages to Brendan's Website (Estimated completion date: July 2040 [Under Contruction])
+Stage 3 - Add final touches and finish Brendan's Website AI (Estimated Completion date: JANUARY 2068[QUEUED])</p>
+</br>
+</br>
+<a href="index.html">Back</a>
+</body>
+</html>
