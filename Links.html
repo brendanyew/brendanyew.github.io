@@ -1,31 +1,146 @@
 <html>
 <head>
 <title>Links</title>
-  <style>
-    body {
-  background-color: white;
-}
 
-h1 {
-  color: white;
-  text-align: center;
-}
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
 
-p {
-  font-family: verdana;
-  font-size: 20px;
-}
-  </style>
+    /* ✨ Animated gradient background */
+    background: linear-gradient(
+      -45deg,
+      #ffffff,
+      #dff6ff,
+      #f3e8ff,
+      #ffe6f2
+    );
+
+    background-size: 400% 400%;
+    animation: gradientBG 12s ease infinite;
+
+    overflow-x: hidden;
+  }
+
+  h1 {
+    color: black;
+    text-align: center;
+  }
+
+  p {
+    font-family: verdana;
+    font-size: 20px;
+  }
+
+  /* ✨ Floating stars */
+  .floating-star {
+    position: fixed;
+    color: white;
+    font-size: 18px;
+    opacity: 0.7;
+    animation: floatUp linear infinite;
+    pointer-events: none;
+  }
+
+  .s1 {
+    left: 10%;
+    animation-duration: 12s;
+    animation-delay: 0s;
+  }
+
+  .s2 {
+    left: 30%;
+    animation-duration: 16s;
+    animation-delay: 2s;
+  }
+
+  .s3 {
+    left: 50%;
+    animation-duration: 14s;
+    animation-delay: 4s;
+  }
+
+  .s4 {
+    left: 70%;
+    animation-duration: 18s;
+    animation-delay: 1s;
+  }
+
+  .s5 {
+    left: 90%;
+    animation-duration: 15s;
+    animation-delay: 3s;
+  }
+
+  /* ✨ Link hover glow */
+  a {
+    font-size: 18px;
+    text-decoration: none;
+    color: black;
+    transition: 0.3s;
+  }
+
+  a:hover {
+    color: #a64dff;
+    text-shadow: 0 0 8px #a64dff;
+  }
+
+  @keyframes gradientBG {
+    0% {
+      background-position: 0% 50%;
+    }
+
+    50% {
+      background-position: 100% 50%;
+    }
+
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  @keyframes floatUp {
+    0% {
+      transform: translateY(100vh) rotate(0deg);
+      opacity: 0;
+    }
+
+    10% {
+      opacity: 0.7;
+    }
+
+    90% {
+      opacity: 0.7;
+    }
+
+    100% {
+      transform: translateY(-120vh) rotate(360deg);
+      opacity: 0;
+    }
+  }
+</style>
 </head>
+
 <body>
-<a href="index.html"><img src="Logo.png" alt="Brendan's Website"></a>
+
+<!-- ✨ Floating stars -->
+<div class="floating-star s1">✦</div>
+<div class="floating-star s2">✦</div>
+<div class="floating-star s3">✦</div>
+<div class="floating-star s4">✦</div>
+<div class="floating-star s5">✦</div>
+
+<a href="index.html">
+  <img src="Logo.png" alt="Brendan's Website">
+</a>
+
 <hr>
 <p>_Folder 3: Links</p>
-</br>
-</br>
+<br>
+<br>
 <a href="https://leo-johnson.com">Leo Johnson's Website</a>
-</br>
-</br>
+<br>
+<br>
 <a href="index.html">Back</a>
 </body>
 </html>
