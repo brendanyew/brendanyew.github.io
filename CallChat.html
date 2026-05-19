@@ -13,6 +13,7 @@
       font-family: Arial;
       background: #0f0f0f;
       color: white;
+      overflow: hidden;
     }
 
     .center {
@@ -23,18 +24,19 @@
     }
 
     .box {
-      width: 300px;
-      padding: 20px;
+      width: 320px;
       background: #1a1a1a;
-      border-radius: 10px;
+      padding: 20px;
+      border-radius: 12px;
     }
 
     input, button {
       width: 100%;
       padding: 10px;
       margin-top: 10px;
-      border: 0;
-      border-radius: 5px;
+      border: none;
+      border-radius: 8px;
+      box-sizing: border-box;
     }
 
     input {
@@ -44,9 +46,11 @@
 
     button {
       background: #22c55e;
-      color: black;
+      font-weight: bold;
       cursor: pointer;
     }
+
+    .hidden { display:none; }
 
     #app {
       display: none;
@@ -55,9 +59,8 @@
     }
 
     #sidebar {
-      width: 250px;
+      width: 260px;
       background: #181818;
-      padding: 10px;
     }
 
     #chat {
@@ -66,24 +69,52 @@
       flex-direction: column;
     }
 
+    #topBar {
+      padding: 12px;
+      background: #181818;
+      border-bottom: 1px solid #333;
+    }
+
     #messages {
       flex: 1;
       padding: 10px;
       overflow-y: auto;
+      background: #111;
     }
 
     #inputBox {
       display: flex;
+      padding: 10px;
+      background: #181818;
+      align-items: center;
     }
 
-    #inputBox input {
+    #msg {
       flex: 1;
+      margin-right: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      background: #222;
+      color: white;
     }
 
-    #error {
-      color: red;
-      margin-top: 10px;
-      font-size: 14px;
+    #sendBtn {
+      width: 100px;
+    }
+
+    #status {
+      font-size: 12px;
+      color: #aaa;
+      margin-left: 10px;
+    }
+
+    #undo {
+      font-size: 12px;
+      color: #3b82f6;
+      cursor: pointer;
+      margin-left: 10px;
+      display: none;
     }
   </style>
 </head>
@@ -93,7 +124,8 @@
 <!-- LOGIN -->
 <div id="login" class="center">
   <div class="box">
-    <h3>Create Account</h3>
+
+    <h2>Create Account</h2>
 
     <div id="stepName">
       <input id="first" placeholder="First name">
@@ -101,173 +133,171 @@
       <button onclick="goPhone()">Continue</button>
     </div>
 
-    <div id="stepPhone" style="display:none;">
-      <input id="phone" placeholder="+614...">
+    <div id="stepPhone" class="hidden">
+      <input id="phone" placeholder="+61 number">
       <button onclick="sendCode()">Send Code</button>
+      <div id="error2"></div>
     </div>
 
-    <div id="stepCode" style="display:none;">
+    <div id="stepCode" class="hidden">
       <input id="code" placeholder="Enter code">
       <button onclick="verify()">Verify</button>
     </div>
 
     <div id="recaptcha"></div>
 
-    <p id="error"></p>
   </div>
 </div>
 
 <!-- APP -->
 <div id="app">
-  <div id="sidebar">
-    <button onclick="newChat()">+ New Chat</button>
-    <div id="chatList"></div>
-  </div>
+
+  <div id="sidebar"></div>
 
   <div id="chat">
+
+    <div id="topBar">
+      <div id="chatName">Chat</div>
+      <div id="statusText">offline</div>
+    </div>
+
     <div id="messages"></div>
 
     <div id="inputBox">
-      <input id="msg">
-      <button onclick="sendMessage()">Send</button>
+
+      <input id="msg" placeholder="Type message...">
+
+      <button id="sendBtn" onclick="sendMessage()">Send</button>
+
+      <div id="status"></div>
+
+      <div id="undo" onclick="undoSend()">Undo</div>
+
     </div>
+
   </div>
+
 </div>
 
 <script>
-  // ================= FIREBASE =================
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID"
-  };
 
-  firebase.initializeApp(firebaseConfig);
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID"
+};
 
-  const auth = firebase.auth();
-  const db = firebase.firestore();
+firebase.initializeApp(firebaseConfig);
 
-  let confirmation;
-  let user;
-  let selectedChat = null;
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-  // ================= STEP 1 =================
-  function goPhone() {
-    document.getElementById("stepName").style.display = "none";
-    document.getElementById("stepPhone").style.display = "block";
-  }
+let user;
+let confirmation;
+let lastMessage = null;
+let undoTimer;
 
-  // ================= SEND CODE =================
-  function sendCode() {
-    const phone = document.getElementById("phone").value;
+/* ---------------- LOGIN FLOW ---------------- */
+function goPhone() {
+  document.getElementById("stepName").classList.add("hidden");
+  document.getElementById("stepPhone").classList.remove("hidden");
+}
 
-    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
-      "recaptcha",
-      { size: "invisible" }
-    );
+function sendCode() {
+  let phone = document.getElementById("phone").value;
+  if (!phone.startsWith("+")) phone = "+61" + phone;
 
-    auth.signInWithPhoneNumber(phone, window.recaptchaVerifier)
-      .then(result => {
-        confirmation = result;
+  window.recaptchaVerifier =
+    new firebase.auth.RecaptchaVerifier("recaptcha", { size: "invisible" });
 
-        document.getElementById("error").innerText = "";
-
-        document.getElementById("stepPhone").style.display = "none";
-        document.getElementById("stepCode").style.display = "block";
-      })
-      .catch(() => {
-        document.getElementById("error").innerText = "Failed to send code";
-      });
-  }
-
-  // ================= VERIFY =================
-  function verify() {
-    const code = document.getElementById("code").value;
-
-    confirmation.confirm(code)
-      .then(res => {
-        user = res.user;
-
-        document.getElementById("login").style.display = "none";
-        document.getElementById("app").style.display = "flex";
-
-        loadChats();
-      })
-      .catch(() => {
-        document.getElementById("error").innerText = "Invalid code";
-      });
-  }
-
-  // ================= LOAD CHATS =================
-  function loadChats() {
-    db.collection("chats").onSnapshot(snapshot => {
-      let html = "";
-
-      snapshot.forEach(doc => {
-        html += `
-          <div 
-            onclick="openChat('${doc.id}')"
-            style="padding:10px; cursor:pointer; border-bottom:1px solid #333;"
-          >
-            ${doc.data().name}
-          </div>
-        `;
-      });
-
-      document.getElementById("chatList").innerHTML = html;
+  auth.signInWithPhoneNumber(phone, window.recaptchaVerifier)
+    .then(res => {
+      confirmation = res;
+      document.getElementById("error2").innerText = "Code sent";
+      document.getElementById("stepPhone").classList.add("hidden");
+      document.getElementById("stepCode").classList.remove("hidden");
+    })
+    .catch(err => {
+      document.getElementById("error2").innerText =
+        "Failed to send code: " + err.message;
     });
-  }
+}
 
-  // ================= OPEN CHAT =================
-  function openChat(id) {
-    selectedChat = id;
+function verify() {
+  const code = document.getElementById("code").value;
 
-    db.collection("messages")
-      .where("chatId", "==", id)
-      .onSnapshot(snapshot => {
-        let html = "";
+  confirmation.confirm(code)
+    .then(res => {
+      user = res.user;
+      document.getElementById("login").style.display = "none";
+      document.getElementById("app").style.display = "flex";
+    });
+}
 
-        snapshot.forEach(doc => {
-          const msg = doc.data();
+/* ---------------- CHAT SEND (GMAIL STYLE) ---------------- */
+function sendMessage() {
 
-          html += `
-            <div style="padding:5px;">
-              ${msg.text}
-            </div>
-          `;
-        });
+  const text = document.getElementById("msg").value;
+  if (!text) return;
 
-        document.getElementById("messages").innerHTML = html;
-      });
-  }
+  setSending();
 
-  // ================= SEND MESSAGE =================
-  function sendMessage() {
-    const text = document.getElementById("msg").value;
+  setTimeout(() => {
 
-    if (!text || !selectedChat) return;
+    lastMessage = {
+      id: Date.now(),
+      text
+    };
 
     db.collection("messages").add({
-      chatId: selectedChat,
-      text: text,
+      text,
       sender: user.uid,
       time: Date.now()
     });
 
-    document.getElementById("msg").value = "";
-  }
+    setSent();
 
-  // ================= NEW CHAT =================
-  function newChat() {
-    const name = prompt("Chat name:");
+  }, 800);
+}
 
-    if (!name) return;
+/* ---------------- STATES ---------------- */
+function setSending() {
+  const btn = document.getElementById("sendBtn");
 
-    db.collection("chats").add({
-      name: name,
-      members: [user.uid]
-    });
-  }
+  btn.innerText = "Sending...";
+  btn.disabled = true;
+
+  document.getElementById("status").innerText = "";
+  document.getElementById("undo").style.display = "none";
+}
+
+function setSent() {
+  const btn = document.getElementById("sendBtn");
+
+  btn.innerText = "Send";
+  btn.disabled = false;
+
+  document.getElementById("status").innerText = "Message sent ✔";
+
+  document.getElementById("msg").value = "";
+
+  document.getElementById("undo").style.display = "inline";
+
+  undoTimer = setTimeout(() => {
+    document.getElementById("undo").style.display = "none";
+  }, 5000);
+}
+
+/* ---------------- UNDO ---------------- */
+function undoSend() {
+
+  lastMessage = null;
+
+  document.getElementById("status").innerText = "Send undone";
+
+  document.getElementById("undo").style.display = "none";
+}
+
 </script>
 
 </body>
