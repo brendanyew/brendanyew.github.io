@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Brendan's CallChat</title>
+  <title>Chat App</title>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
@@ -79,6 +79,12 @@
     #inputBox input {
       flex: 1;
     }
+
+    #error {
+      color: red;
+      margin-top: 10px;
+      font-size: 14px;
+    }
   </style>
 </head>
 
@@ -106,6 +112,7 @@
     </div>
 
     <div id="recaptcha"></div>
+
     <p id="error"></p>
   </div>
 </div>
@@ -144,7 +151,7 @@
   let user;
   let selectedChat = null;
 
-  // ================= NAME STEP =================
+  // ================= STEP 1 =================
   function goPhone() {
     document.getElementById("stepName").style.display = "none";
     document.getElementById("stepPhone").style.display = "block";
@@ -162,11 +169,14 @@
     auth.signInWithPhoneNumber(phone, window.recaptchaVerifier)
       .then(result => {
         confirmation = result;
+
+        document.getElementById("error").innerText = "";
+
         document.getElementById("stepPhone").style.display = "none";
         document.getElementById("stepCode").style.display = "block";
       })
-      .catch(err => {
-        document.getElementById("error").innerText = err.message;
+      .catch(() => {
+        document.getElementById("error").innerText = "Failed to send code";
       });
   }
 
@@ -188,17 +198,27 @@
       });
   }
 
-  // ================= CHATS =================
+  // ================= LOAD CHATS =================
   function loadChats() {
     db.collection("chats").onSnapshot(snapshot => {
       let html = "";
+
       snapshot.forEach(doc => {
-        html += `<div onclick="openChat('${doc.id}')">${doc.data().name}</div>`;
+        html += `
+          <div 
+            onclick="openChat('${doc.id}')"
+            style="padding:10px; cursor:pointer; border-bottom:1px solid #333;"
+          >
+            ${doc.data().name}
+          </div>
+        `;
       });
+
       document.getElementById("chatList").innerHTML = html;
     });
   }
 
+  // ================= OPEN CHAT =================
   function openChat(id) {
     selectedChat = id;
 
@@ -206,9 +226,17 @@
       .where("chatId", "==", id)
       .onSnapshot(snapshot => {
         let html = "";
+
         snapshot.forEach(doc => {
-          html += `<div>${doc.data().text}</div>`;
+          const msg = doc.data();
+
+          html += `
+            <div style="padding:5px;">
+              ${msg.text}
+            </div>
+          `;
         });
+
         document.getElementById("messages").innerHTML = html;
       });
   }
@@ -217,9 +245,11 @@
   function sendMessage() {
     const text = document.getElementById("msg").value;
 
+    if (!text || !selectedChat) return;
+
     db.collection("messages").add({
       chatId: selectedChat,
-      text,
+      text: text,
       sender: user.uid,
       time: Date.now()
     });
@@ -230,10 +260,11 @@
   // ================= NEW CHAT =================
   function newChat() {
     const name = prompt("Chat name:");
+
     if (!name) return;
 
     db.collection("chats").add({
-      name,
+      name: name,
       members: [user.uid]
     });
   }
