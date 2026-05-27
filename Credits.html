@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Credits</title>
+
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: black;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      color: white;
+    }
+
+    .credits-container {
+      position: absolute;
+      bottom: -100%;
+      text-align: center;
+      animation: scrollCredits 24s linear infinite;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 60px;
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      font-size: 36px;
+      margin-bottom: 30px;
+    }
+
+    p {
+      font-size: 24px;
+      margin: 20px 0;
+      line-height: 1.6;
+    }
+
+    a {
+      color: #4da6ff;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    @keyframes scrollCredits {
+      from {
+        transform: translateY(100%);
+      }
+
+      to {
+        transform: translateY(-300%);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="credits-container">
+    <h1>Credits</h1>
+
+    <h2>Special Thanks To</h2>
+
+    <p>
+      A school friend.<br>
+      Visit his website on
+      <a href="https://leo-johnson.com" target="_blank">
+        leo-johnson.com
+      </a>
+    </p>
+
+    <p>
+      ChatGPT OpenAI.<br>
+      Chat now on
+      <a href="https://chatgpt.com" target="_blank">
+        chatgpt.com
+      </a>
+    </p>
+
+    <p>Parents.</p>
+
+    <p>Jesus and God in Heaven</p>
+
+    <p>That's that. All the credits.</p>
+  </div>
+
+</body>
+</html>
