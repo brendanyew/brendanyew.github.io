@@ -1,0 +1,186 @@
+<html>
+<head>
+<title>_DO_NOT_USE</title>
+
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+
+    /* ✨ Animated gradient background */
+    background: linear-gradient(
+      -45deg,
+      #ffffff,
+      #dff6ff,
+      #f3e8ff,
+      #ffe6f2
+    );
+
+    background-size: 400% 400%;
+    animation: gradientBG 12s ease infinite;
+
+    overflow-x: hidden;
+  }
+
+  h1 {
+    color: black;
+    text-align: center;
+  }
+
+  p {
+    font-family: verdana;
+    font-size: 20px;
+    line-height: 1.6;
+    padding: 10px;
+  }
+
+  /* ✨ Coming soon animation */
+  .coming-soon {
+    font-family: Arial, sans-serif;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+    font-weight: bold;
+  }
+
+  .star {
+    font-size: 22px;
+    animation: flashColors 1.2s infinite, pulse 1.2s infinite;
+    text-shadow: 0 0 8px currentColor;
+  }
+
+  /* ✨ Floating stars */
+  .floating-star {
+    position: fixed;
+    color: white;
+    font-size: 18px;
+    opacity: 0.7;
+    animation: floatUp linear infinite;
+    pointer-events: none;
+  }
+
+  .s1 {
+    left: 10%;
+    animation-duration: 12s;
+    animation-delay: 0s;
+  }
+
+  .s2 {
+    left: 30%;
+    animation-duration: 16s;
+    animation-delay: 2s;
+  }
+
+  .s3 {
+    left: 50%;
+    animation-duration: 14s;
+    animation-delay: 4s;
+  }
+
+  .s4 {
+    left: 70%;
+    animation-duration: 18s;
+    animation-delay: 1s;
+  }
+
+  .s5 {
+    left: 90%;
+    animation-duration: 15s;
+    animation-delay: 3s;
+  }
+
+  /* ✨ Link glow */
+  a {
+    font-size: 18px;
+    text-decoration: none;
+    color: black;
+    transition: 0.3s;
+  }
+
+  a:hover {
+    color: #a64dff;
+    text-shadow: 0 0 8px #a64dff;
+  }
+
+  @keyframes gradientBG {
+    0% {
+      background-position: 0% 50%;
+    }
+
+    50% {
+      background-position: 100% 50%;
+    }
+
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  @keyframes flashColors {
+    0%   { color: #ff4da6; }
+    33%  { color: #a64dff; }
+    66%  { color: #4da6ff; }
+    100% { color: #ff4da6; }
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+
+    50% {
+      transform: scale(1.3);
+    }
+  }
+
+  @keyframes floatUp {
+    0% {
+      transform: translateY(100vh) rotate(0deg);
+      opacity: 0;
+    }
+
+    10% {
+      opacity: 0.7;
+    }
+
+    90% {
+      opacity: 0.7;
+    }
+
+    100% {
+      transform: translateY(-120vh) rotate(360deg);
+      opacity: 0;
+    }
+  }
+</style>
+</head>
+
+<body>
+
+<!-- ✨ Floating stars -->
+<div class="floating-star s1">✦</div>
+<div class="floating-star s2">✦</div>
+<div class="floating-star s3">✦</div>
+<div class="floating-star s4">✦</div>
+<div class="floating-star s5">✦</div>
+
+<a href="index.html">
+  <img src="Logo.png" alt="Brendan's Website">
+</a>
+<p>thumbnail.png</p>
+</br>
+</br>
+  <img src=".thumbnail.png" alt="thumbnail1.png">
+</br>
+</br>
+  <img src="thumbnail.png" alt="thumbnail2.png">
+</br>
+</br>
+</br>
+</br>
+<a href="index.html">Back</a>
+</body>
+</html>
