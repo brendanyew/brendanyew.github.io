@@ -1,0 +1,208 @@
+<html>
+<head>
+<title>Brendan's Website</title>
+
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+
+    /* ✨ Animated gradient background */
+    background: linear-gradient(
+      -45deg,
+      #ffffff,
+      #dff6ff,
+      #f3e8ff,
+      #ffe6f2
+    );
+
+    background-size: 400% 400%;
+    animation: gradientBG 12s ease infinite;
+
+    overflow-x: hidden;
+  }
+
+  h1 {
+    color: black;
+    text-align: center;
+  }
+
+  p {
+    font-family: verdana;
+    font-size: 20px;
+  }
+
+  /* ✨ Coming soon animation */
+  .coming-soon {
+    font-family: Arial, sans-serif;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .star {
+    font-size: 22px;
+    animation: flashColors 1.2s infinite, pulse 1.2s infinite;
+    text-shadow: 0 0 8px currentColor;
+  }
+
+  /* ✨ Floating stars in background */
+  .floating-star {
+    position: fixed;
+    color: white;
+    font-size: 18px;
+    opacity: 0.7;
+    animation: floatUp linear infinite;
+    pointer-events: none;
+  }
+
+  .s1 {
+    left: 10%;
+    animation-duration: 12s;
+    animation-delay: 0s;
+  }
+
+  .s2 {
+    left: 30%;
+    animation-duration: 16s;
+    animation-delay: 2s;
+  }
+
+  .s3 {
+    left: 50%;
+    animation-duration: 14s;
+    animation-delay: 4s;
+  }
+
+  .s4 {
+    left: 70%;
+    animation-duration: 18s;
+    animation-delay: 1s;
+  }
+
+  .s5 {
+    left: 90%;
+    animation-duration: 15s;
+    animation-delay: 3s;
+  }
+
+  /* ✨ Links glow on hover */
+  a {
+    font-size: 18px;
+    text-decoration: none;
+    color: black;
+    transition: 0.3s;
+  }
+
+  a:hover {
+    color: #a64dff;
+    text-shadow: 0 0 8px #a64dff;
+  }
+
+  @keyframes gradientBG {
+    0% {
+      background-position: 0% 50%;
+    }
+
+    50% {
+      background-position: 100% 50%;
+    }
+
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  @keyframes flashColors {
+    0%   { color: #ff4da6; }
+    33%  { color: #a64dff; }
+    66%  { color: #4da6ff; }
+    100% { color: #ff4da6; }
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+
+    50% {
+      transform: scale(1.3);
+    }
+  }
+
+  @keyframes floatUp {
+    0% {
+      transform: translateY(100vh) rotate(0deg);
+      opacity: 0;
+    }
+
+    10% {
+      opacity: 0.7;
+    }
+
+    90% {
+      opacity: 0.7;
+    }
+
+    100% {
+      transform: translateY(-120vh) rotate(360deg);
+      opacity: 0;
+    }
+  }
+</style>
+</head>
+
+<body>
+
+<!-- ✨ Floating stars -->
+<div class="floating-star s1">✦</div>
+<div class="floating-star s2">✦</div>
+<div class="floating-star s3">✦</div>
+<div class="floating-star s4">✦</div>
+<div class="floating-star s5">✦</div>
+
+<a href="index.html">
+  <img src="Logo.png" alt="Brendan's Website">
+</a>
+
+<hr>
+
+<!-- ✨ Animated message -->
+<div class="coming-soon">
+  <span class="star">✦</span>
+  <span>Oldest on the bottom -> Newest on the top</span>
+</div>
+
+<p>Brendan's Website Timeline
+</br>
+</br>
+<b>August 9th 2026 - </b> Subheading sentences changed and Brendan's Website Timeline Created
+</br>
+</br>
+<b>May 10th 2026 - </b> CallChat, Link to THE VOID, Credits, Quote Of The Year, About Me and Updates Created
+</br>
+</br>
+<b>April 7th 2026 - </b> Timer and Stopwatch, Calculator, Converter, Forecast, Thumbnail.png, Credits, Jack.fun link, ww3 schools link, HEX, LCM and HCF, Prime or Composite created
+</br>
+</br>
+<b>March 29th 2026- </b> Design, Heading and Background changed
+</br>
+</br>
+<b>March 21th 2026 - </b> Folders 1, 2, 3 and Brendan's Website Project Info Created
+</br>
+</br>
+<b>January 1st 2026 - </b>Inspired
+</br>
+</br>
+<b>21st September 2009 - </b>Idea
+</br>
+</br>
+<b>3rd January 1912 -</b>Absolute Start/ Examination</p>
+<br>
+<br>
+<a href="index.html">Back</a>
+</body>
+</html>
