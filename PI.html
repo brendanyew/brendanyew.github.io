@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pi Digit Streamer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f6f8fa;
+            color: #24292f;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #ffffff;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            padding: 24px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 3px 6px rgba(140,149,159,0.15);
+        }
+        h2 {
+            margin-top: 0;
+            font-size: 20px;
+            font-weight: 600;
+            border-bottom: 1px solid #d0d7de;
+            padding-bottom: 8px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 8px 12px;
+            font-size: 16px;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            box-sizing: border-box;
+            background-color: #f6f8fa;
+        }
+        .status-box {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 16px 0;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background-color: #f3f4f6;
+            border: 1px solid #e5e7eb;
+        }
+        .status-ready { color: #0969da; }
+        .status-disconnected { color: #cf222e; }
+        .status-streaming { color: #9a6700; }
+        
+        button {
+            width: 100%;
+            padding: 10px 16px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 6px;
+            border: 1px solid;
+            cursor: pointer;
+            display: none;
+        }
+        .btn-play {
+            background-color: #2da44e;
+            color: #ffffff;
+            border-color: rgba(27,31,36,0.15);
+        }
+        .btn-connect {
+            background-color: #24292f;
+            color: #ffffff;
+            border-color: rgba(27,31,36,0.15);
+        }
+        .btn-stop {
+            background-color: #cf222e;
+            color: #ffffff;
+            border-color: rgba(27,31,36,0.15);
+        }
+        .output-label {
+            font-weight: 500;
+            font-size: 14px;
+            margin-top: 20px;
+            display: block;
+        }
+        .output-box {
+            width: 100%;
+            height: 150px;
+            margin-top: 6px;
+            padding: 12px;
+            font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+            font-size: 14px;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            background-color: #f6f8fa;
+            box-sizing: border-box;
+            overflow-y: auto;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Pi Digit Streamer</h2>
+    
+    <div class="form-group">
+        <label for="digitCount">How many digits do you want?</label>
+        <input type="number" id="digitCount" value="100" min="1" placeholder="e.g. 100">
+    </div>
+
+    <div class="status-box">
+        Status: <span id="statusText">Checking connection...</span>
+    </div>
+
+    <button id="btnPlay" class="btn-play" onclick="startStreaming()">Play</button>
+    <button id="btnConnect" class="btn-connect" onclick="retryConnection()">Connect</button>
+    <button id="btnStop" class="btn-stop" onclick="stopStreaming()">Stop</button>
+
+    <span class="output-label">Pi Output:</span>
+    <div id="output" class="output-box"></div>
+</div>
+
+<script>
+    const statusText = document.getElementById('statusText');
+    const btnPlay = document.getElementById('btnPlay');
+    const btnConnect = document.getElementById('btnConnect');
+    const btnStop = document.getElementById('btnStop');
+    const output = document.getElementById('output');
+    const digitCountInput = document.getElementById('digitCount');
+
+    let streamInterval = null;
+    let isStreaming = false;
+
+    // Monitor local network status changes
+    window.addEventListener('online', updateConnectionStatus);
+    window.addEventListener('offline', updateConnectionStatus);
+
+    function updateConnectionStatus() {
+        if (isStreaming) return; // Keep streaming state if already running
+
+        if (navigator.onLine) {
+            statusText.innerText = "Ready (No service)";
+            statusText.className = "status-ready";
+            btnPlay.style.display = "block";
+            btnConnect.style.display = "none";
+            btnStop.style.display = "none";
+        } else {
+            statusText.innerText = "no connection";
+            statusText.className = "status-disconnected";
+            btnPlay.style.display = "none";
+            btnConnect.style.display = "block";
+            btnStop.style.display = "none";
+        }
+    }
+
+    function retryConnection() {
+        updateConnectionStatus();
+    }
+
+    function startStreaming() {
+        if (!navigator.onLine) {
+            updateConnectionStatus();
+            return;
+        }
+
+        const maxDigits = parseInt(digitCountInput.value);
+        if (isNaN(maxDigits) || maxDigits < 1) {
+            alert("Please enter a valid number of digits greater than 0.");
+            return;
+        }
+
+        isStreaming = true;
+        output.innerText = "3.";
+        
+        statusText.innerText = "Streaming.... (No Service)";
+        statusText.className = "status-streaming";
+        btnPlay.style.display = "none";
+        btnConnect.style.display = "none";
+        btnStop.style.display = "block";
+
+        // Initialize Spigot algorithm variables for generator state
+        let q = 1n, r = 0n, t = 1n, k = 1n, n = 3n, l = 3n;
+        let count = 0;
+
+        streamInterval = setInterval(() => {
+            if (!navigator.onLine) {
+                stopStreaming();
+                updateConnectionStatus();
+                return;
+            }
+
+            // Generate digits using Lambert's formula spigot iteration
+            while (count < maxDigits) {
+                if (4n * q + r - t < n * t) {
+                    if (count > 0) {
+                        output.innerText += n.toString();
+                    }
+                    count++;
+                    
+                    if (count >= maxDigits) {
+                        clearInterval(streamInterval);
+                        isStreaming = false;
+                        updateConnectionStatus();
+                        return;
+                    }
+
+                    let nr = 10n * (r - n * t);
+                    n = 10n * (3n * q + r) / t - 10n * n;
+                    q *= 10n;
+                    r = nr;
+                } else {
+                    let nr = (2n * q + r) * l;
+                    let nn = (q * (7n * k + 2n) + r * l) / (t * l);
+                    q *= k;
+                    t *= l;
+                    l += 2n;
+                    k += 1n;
+                    n = nn;
+                    r = nr;
+                }
+                
+                // Break loop execution to output next digit on next interval tick (creates stream effect)
+                break;
+            }
+        }, 50); // Speed control: appends 1 digit every 50ms
+    }
+
+    function stopStreaming() {
+        clearInterval(streamInterval);
+        isStreaming = false;
+        updateConnectionStatus();
+    }
+
+    // Initial load connection check
+    updateConnectionStatus();
+</script>
+
+</body>
+</html>
