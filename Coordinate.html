@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Coordinate Device</title>
+    <style>
+        /* Rule 5: Pure white background */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            color: #111111;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .device-container {
+            text-align: center;
+            padding: 30px;
+            max-width: 90%;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: #444444;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .coordinate-display {
+            font-size: 2.5rem;
+            font-weight: 800;
+            font-family: "Courier New", Courier, monospace;
+            line-height: 1.6;
+            word-break: break-all;
+        }
+
+        /* Rule 4: Dynamic Direction Color Rules */
+        .north { color: #ff3b30; } /* Red */
+        .south { color: #007aff; } /* Blue */
+        .east  { color: #ffcc00; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); } /* Yellow (with subtle shadow for white bg readability) */
+        .west  { color: #34c759; } /* Green */
+
+        .status-message {
+            font-size: 1.1rem;
+            color: #666666;
+            margin-top: 10px;
+        }
+
+        .error-message {
+            color: #ff3b30;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="device-container">
+        <h1>GPS Tracking Device</h1>
+        <div id="display" class="coordinate-display">
+            <div class="status-message">Awaiting location permission...</div>
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display');
+
+        // Convert decimal degrees to DMS format: N/S/E/W XXX°XX'XX.XX"
+        function convertToDMS(decimal, isLongitude) {
+            let direction = "";
+            let cssClass = "";
+
+            if (!isLongitude) {
+                // Latitude logic
+                if (decimal >= 0) {
+                    direction = "N";
+                    cssClass = "north"; // Rule 4: North is Red
+                } else {
+                    direction = "S";
+                    cssClass = "south"; // Rule 4: South is Blue
+                }
+            } else {
+                // Longitude logic
+                if (decimal >= 0) {
+                    direction = "E";
+                    cssClass = "east";  // Rule 4: East is Yellow
+                } else {
+                    direction = "W";
+                    cssClass = "west";  // Rule 4: West is Green
+                }
+            }
+
+            const absolute = Math.abs(decimal);
+            const degrees = Math.floor(absolute);
+            const minutesNotTruncated = (absolute - degrees) * 60;
+            const minutes = Math.floor(minutesNotTruncated);
+            const seconds = ((minutesNotTruncated - minutes) * 60).toFixed(2);
+
+            // Pad numbers with leading zeros for traditional coordinate look (e.g., 05° instead of 5°)
+            const strDegrees = String(degrees).padStart(isLongitude ? 3 : 2, '0');
+            const strMinutes = String(minutes).padStart(2, '0');
+            const strSeconds = String(seconds).padStart(5, '0');
+
+            // Rule 2 & 3: Format prefix string wrapped in targeted CSS colors
+            return `<span class="${cssClass}">${direction}${strDegrees}°${strMinutes}'${strSeconds}"</span>`;
+        }
+
+        function successCallback(position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            // Rule 3: Format Latitude first, then Longitude
+            const latDMS = convertToDMS(latitude, false);
+            const lonDMS = convertToDMS(longitude, true);
+
+            display.innerHTML = `${latDMS}<br>${lonDMS}`;
+        }
+
+        function errorCallback(error) {
+            let msg = "";
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    msg = "Permission denied. Please allow location access in your browser settings to run this device.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    msg = "Location information is unavailable.";
+                    break;
+                case error.TIMEOUT:
+                    msg = "The request to get user location timed out.";
+                    break;
+                default:
+                    msg = "An unknown error occurred.";
+            }
+            display.innerHTML = `<div class="status-message error-message">${msg}</div>`;
+        }
+
+        // Rule 1: Triggers the native browser "allow this website to use location" popup window
+        if (navigator.geolocation) {
+            // watchPosition updates coordinates in real-time as the device moves
+            navigator.geolocation.watchPosition(successCallback, errorCallback, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            });
+        } else {
+            display.innerHTML = `<div class="status-message error-message">Geolocation is not supported by this browser.</div>`;
+        }
+    </script>
+</body>
+</html>
