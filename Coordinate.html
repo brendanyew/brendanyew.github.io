@@ -28,21 +28,32 @@
         h1 {
             font-size: 1.5rem;
             color: #444444;
-            margin-bottom: 0.5rem; /* Reduced to leave room for the sub-status */
+            margin-bottom: 0.5rem;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        /* New Sub-heading Status Styles */
+        /* Sub-heading Status Styles */
         .gps-status {
             font-size: 1.1rem;
             font-weight: bold;
-            margin-bottom: 2rem;
+            margin-bottom: 0.2rem; /* Reduced to leave room for connection status line */
             text-transform: uppercase;
             letter-spacing: 1px;
         }
         .status-on { color: #30d158; }  /* Light Green */
         .status-off { color: #ff3b30; } /* Bright Red */
+
+        /* Connection Reminder Text Styles */
+        .connection-status {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .conn-online { color: #007aff; }  /* Bright Blue (#007aff) */
+        .conn-offline { color: #ff3b30; } /* Bright Red */
 
         .coordinate-display {
             font-size: 2.5rem;
@@ -88,8 +99,9 @@
 </a>
     <div class="device-container">
         <h1>GPS Tracking Device</h1>
-        <!-- Added dynamic sub-heading text line -->
         <div id="gpsStatus" class="gps-status status-off">GPS Off</div>
+        <!-- Added Connection Status Reminder Line right below GPS status -->
+        <div id="connectionStatus" class="connection-status conn-offline">No Connection</div>
         
         <div id="display" class="coordinate-display">
             <div class="status-message">Awaiting location permission...</div>
@@ -99,7 +111,23 @@
     <script>
         const display = document.getElementById('display');
         const gpsStatus = document.getElementById('gpsStatus');
+        const connectionStatus = document.getElementById('connectionStatus');
         let watchId = null;
+
+        // Monitor and update connection indicator text purely as a reminder layout element
+        function updateNetworkStatus() {
+            if (navigator.onLine) {
+                connectionStatus.textContent = "No Service";
+                connectionStatus.className = "connection-status conn-online";
+            } else {
+                connectionStatus.textContent = "No Connection";
+                connectionStatus.className = "connection-status conn-offline";
+            }
+        }
+
+        // Setup real-time event listeners for network switches (Doesn't touch GPS calculations)
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
 
         // Convert decimal degrees to DMS format: N/S/E/W XXX°XX'XX.XX"
         function convertToDMS(decimal, isLongitude) {
@@ -138,7 +166,6 @@
         }
 
         function successCallback(position) {
-            // Update sub-heading text line to online state
             gpsStatus.textContent = "GPS On";
             gpsStatus.className = "gps-status status-on";
 
@@ -152,7 +179,6 @@
         }
 
         function errorCallback(error) {
-            // Update sub-heading text line to offline state
             gpsStatus.textContent = "GPS Off";
             gpsStatus.className = "gps-status status-off";
 
@@ -182,9 +208,11 @@
             }
         }
 
-        // Initialize on first page entry
+        // Initialize state indicators together on application launch
+        updateNetworkStatus();
         startTracking();
     </script>
 </body>
 </html>
+
 
