@@ -11,7 +11,7 @@
             padding: 0;
             background-color: #ffffff;
             color: #111111;
-            font-family: Arial, -apple-system, BlinkMacSystemFont, sans-serif; /* Updated to Arial preferred */
+            font-family: Arial, -apple-system, BlinkMacSystemFont, sans-serif; /* Arial preferred */
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -36,7 +36,7 @@
         .coordinate-display {
             font-size: 2.5rem;
             font-weight: 800;
-            font-family: Arial, sans-serif; /* Applied Arial Font specifically to coordinates */
+            font-family: Arial, sans-serif; /* Arial Font specifically to coordinates */
             line-height: 1.6;
             word-break: break-all;
             letter-spacing: 0.5px;
@@ -54,17 +54,24 @@
             margin-top: 10px;
         }
 
-        .error-message {
+        /* Clickable Error Link for Loop Requirement */
+        .error-link {
             color: #ff3b30;
             font-weight: bold;
+            text-decoration: underline;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 1.3rem;
+        }
+        
+        .error-link:hover {
+            color: #d1271b;
         }
     </style>
 </head>
 <body>
 
-<a href="index.html">
-  <img src="Logo.png" alt="Brendan's Website">
-</a>
     <div class="device-container">
         <h1>GPS Tracking Device</h1>
         <div id="display" class="coordinate-display">
@@ -74,6 +81,7 @@
 
     <script>
         const display = document.getElementById('display');
+        let watchId = null;
 
         // Convert decimal degrees to DMS format: N/S/E/W XXX°XX'XX.XX"
         function convertToDMS(decimal, isLongitude) {
@@ -81,7 +89,6 @@
             let cssClass = "";
 
             if (!isLongitude) {
-                // Latitude logic
                 if (decimal >= 0) {
                     direction = "N";
                     cssClass = "north"; // Rule 4: North is Red
@@ -90,7 +97,6 @@
                     cssClass = "south"; // Rule 4: South is Blue
                 }
             } else {
-                // Longitude logic
                 if (decimal >= 0) {
                     direction = "E";
                     cssClass = "east";  // Rule 4: East is Yellow
@@ -106,12 +112,10 @@
             const minutes = Math.floor(minutesNotTruncated);
             const seconds = ((minutesNotTruncated - minutes) * 60).toFixed(2);
 
-            // Pad numbers with leading zeros for traditional coordinate look
             const strDegrees = String(degrees).padStart(isLongitude ? 3 : 2, '0');
             const strMinutes = String(minutes).padStart(2, '0');
             const strSeconds = String(seconds).padStart(5, '0');
 
-            // Rule 2 & 3: Format prefix string wrapped in targeted CSS colors
             return `<span class="${cssClass}">${direction}${strDegrees}°${strMinutes}'${strSeconds}"</span>`;
         }
 
@@ -127,33 +131,37 @@
         }
 
         function errorCallback(error) {
-            let msg = "";
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    msg = "Permission denied. Please allow location access in your browser settings to run this device.";
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    msg = "Location information is unavailable.";
-                    break;
-                case error.TIMEOUT:
-                    msg = "The request to get user location timed out.";
-                    break;
-                default:
-                    msg = "An unknown error occurred.";
+            // Stop any active tracking attempts to clear browser state for the retry click
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
             }
-            display.innerHTML = `<div class="status-message error-message">${msg}</div>`;
+
+            // Loop Requirement: Deny action displays your custom message string acting as a trigger link
+            display.innerHTML = `
+                <div class="error-link" onclick="startTracking()">
+                    Location Denied! Click here to use this website
+                </div>
+            `;
         }
 
-        // Rule 1: Triggers the native browser location prompt
-        if (navigator.geolocation) {
-            navigator.geolocation.watchPosition(successCallback, errorCallback, {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0
-            });
-        } else {
-            display.innerHTML = `<div class="status-message error-message">Geolocation is not supported by this browser.</div>`;
+        function startTracking() {
+            display.innerHTML = `<div class="status-message">Awaiting location permission...</div>`;
+            
+            if (navigator.geolocation) {
+                // Requesting coordinates. If blocked before, this prompts the loop state via errorCallback
+                watchId = navigator.geolocation.watchPosition(successCallback, errorCallback, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                });
+            } else {
+                display.innerHTML = `<div class="status-message">Geolocation is not supported by this browser.</div>`;
+            }
         }
+
+        // Initialize on first page entry
+        startTracking();
     </script>
 </body>
 </html>
