@@ -28,10 +28,32 @@
         h1 {
             font-size: 1.5rem;
             color: #444444;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Sub-heading Status Styles */
+        .gps-status {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 0.2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .status-on { color: #30d158; }  /* Light Green */
+        .status-off { color: #ff3b30; } /* Bright Red */
+
+        /* Connection Reminder Text Styles */
+        .connection-status {
+            font-size: 1rem;
+            font-weight: bold;
             margin-bottom: 2rem;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
+        .conn-online { color: #007aff; }  /* Bright Blue (#007aff) */
+        .conn-offline { color: #ff3b30; } /* Bright Red */
 
         .coordinate-display {
             font-size: 2.5rem;
@@ -44,9 +66,9 @@
 
         /* Rule 4: Dynamic Direction Color Rules */
         .north { color: #ff3b30; } /* Red */
-        .south { color: #007aff; } /* Blue */
+        .south { color: #007aff; } /* Blue (#007aff) */
         .east  { color: #ffcc00; text-shadow: 1px 1px 1px rgba(0,0,0,0.15); } /* Yellow */
-        .west  { color: #34c759; } /* Green */
+        .west  { color: #34c759; } /* Green (#34c759) */
 
         .status-message {
             font-size: 1.1rem;
@@ -72,11 +94,14 @@
 </head>
 <body>
 
-    <a href="index.html">
+<a href="index.html">
   <img src="Logo.png" alt="Brendan's Website">
 </a>
     <div class="device-container">
         <h1>GPS Tracking Device</h1>
+        <div id="gpsStatus" class="gps-status status-off">GPS Off</div>
+        <div id="connectionStatus" class="connection-status conn-offline">No Connection</div>
+        
         <div id="display" class="coordinate-display">
             <div class="status-message">Awaiting location permission...</div>
         </div>
@@ -84,7 +109,23 @@
 
     <script>
         const display = document.getElementById('display');
+        const gpsStatus = document.getElementById('gpsStatus');
+        const connectionStatus = document.getElementById('connectionStatus');
         let watchId = null;
+
+        // Monitor and update connection indicator text purely as a reminder layout element
+        function updateNetworkStatus() {
+            if (navigator.onLine) {
+                connectionStatus.textContent = "No Service";
+                connectionStatus.className = "connection-status conn-online";
+            } else {
+                connectionStatus.textContent = "No Connection";
+                connectionStatus.className = "connection-status conn-offline";
+            }
+        }
+
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
 
         // Convert decimal degrees to DMS format: N/S/E/W XXX°XX'XX.XXXX"
         function convertToDMS(decimal, isLongitude) {
@@ -94,18 +135,18 @@
             if (!isLongitude) {
                 if (decimal >= 0) {
                     direction = "N";
-                    cssClass = "north"; // Rule 4: North is Red
+                    cssClass = "north";
                 } else {
                     direction = "S";
-                    cssClass = "south"; // Rule 4: South is Blue
+                    cssClass = "south";
                 }
             } else {
                 if (decimal >= 0) {
                     direction = "E";
-                    cssClass = "east";  // Rule 4: East is Yellow
+                    cssClass = "east";
                 } else {
                     direction = "W";
-                    cssClass = "west";  // Rule 4: West is Green
+                    cssClass = "west";
                 }
             }
 
@@ -114,19 +155,20 @@
             const minutesNotTruncated = (absolute - degrees) * 60;
             const minutes = Math.floor(minutesNotTruncated);
             
-            // CHANGED HERE: Changed .toFixed(2) to .toFixed(4) for maximum precision
+            // Keeps 4 decimal places for maximum millimetric precision
             const seconds = ((minutesNotTruncated - minutes) * 60).toFixed(4);
 
             const strDegrees = String(degrees).padStart(isLongitude ? 3 : 2, '0');
             const strMinutes = String(minutes).padStart(2, '0');
-            
-            // Pad seconds to match the 4-decimal layout cleanly (e.g., 05.1234")
             const strSeconds = String(seconds).padStart(7, '0');
 
             return `<span class="${cssClass}">${direction}${strDegrees}°${strMinutes}'${strSeconds}"</span>`;
         }
 
         function successCallback(position) {
+            gpsStatus.textContent = "GPS On";
+            gpsStatus.className = "gps-status status-on";
+
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
 
@@ -137,6 +179,9 @@
         }
 
         function errorCallback(error) {
+            gpsStatus.textContent = "GPS Off";
+            gpsStatus.className = "gps-status status-off";
+
             if (watchId !== null) {
                 navigator.geolocation.clearWatch(watchId);
                 watchId = null;
@@ -163,8 +208,10 @@
             }
         }
 
-        // Initialize on first page entry
+        // Initialize state indicators together on application launch
+        updateNetworkStatus();
         startTracking();
     </script>
 </body>
 </html>
+
