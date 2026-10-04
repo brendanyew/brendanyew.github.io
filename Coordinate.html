@@ -28,10 +28,21 @@
         h1 {
             font-size: 1.5rem;
             color: #444444;
+            margin-bottom: 0.5rem; /* Reduced to leave room for the sub-status */
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* New Sub-heading Status Styles */
+        .gps-status {
+            font-size: 1.1rem;
+            font-weight: bold;
             margin-bottom: 2rem;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
+        .status-on { color: #30d158; }  /* Light Green */
+        .status-off { color: #ff3b30; } /* Bright Red */
 
         .coordinate-display {
             font-size: 2.5rem;
@@ -44,9 +55,9 @@
 
         /* Rule 4: Dynamic Direction Color Rules */
         .north { color: #ff3b30; } /* Red */
-        .south { color: #007aff; } /* Blue */
+        .south { color: #007aff; } /* Blue (#007aff) */
         .east  { color: #ffcc00; text-shadow: 1px 1px 1px rgba(0,0,0,0.15); } /* Yellow */
-        .west  { color: #34c759; } /* Green */
+        .west  { color: #34c759; } /* Green (#34c759) */
 
         .status-message {
             font-size: 1.1rem;
@@ -77,6 +88,9 @@
 </a>
     <div class="device-container">
         <h1>GPS Tracking Device</h1>
+        <!-- Added dynamic sub-heading text line -->
+        <div id="gpsStatus" class="gps-status status-off">GPS Off</div>
+        
         <div id="display" class="coordinate-display">
             <div class="status-message">Awaiting location permission...</div>
         </div>
@@ -84,6 +98,7 @@
 
     <script>
         const display = document.getElementById('display');
+        const gpsStatus = document.getElementById('gpsStatus');
         let watchId = null;
 
         // Convert decimal degrees to DMS format: N/S/E/W XXX°XX'XX.XX"
@@ -94,18 +109,18 @@
             if (!isLongitude) {
                 if (decimal >= 0) {
                     direction = "N";
-                    cssClass = "north"; // Rule 4: North is Red
+                    cssClass = "north";
                 } else {
                     direction = "S";
-                    cssClass = "south"; // Rule 4: South is Blue
+                    cssClass = "south";
                 }
             } else {
                 if (decimal >= 0) {
                     direction = "E";
-                    cssClass = "east";  // Rule 4: East is Yellow
+                    cssClass = "east";
                 } else {
                     direction = "W";
-                    cssClass = "west";  // Rule 4: West is Green
+                    cssClass = "west";
                 }
             }
 
@@ -123,10 +138,13 @@
         }
 
         function successCallback(position) {
+            // Update sub-heading text line to online state
+            gpsStatus.textContent = "GPS On";
+            gpsStatus.className = "gps-status status-on";
+
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
 
-            // Rule 3: Format Latitude first, then Longitude
             const latDMS = convertToDMS(latitude, false);
             const lonDMS = convertToDMS(longitude, true);
 
@@ -134,13 +152,15 @@
         }
 
         function errorCallback(error) {
-            // Stop any active tracking attempts to clear browser state for the retry click
+            // Update sub-heading text line to offline state
+            gpsStatus.textContent = "GPS Off";
+            gpsStatus.className = "gps-status status-off";
+
             if (watchId !== null) {
                 navigator.geolocation.clearWatch(watchId);
                 watchId = null;
             }
 
-            // Loop Requirement: Deny action displays your custom message string acting as a trigger link
             display.innerHTML = `
                 <div class="error-link" onclick="startTracking()">
                     Location Denied! Click here to use this website
@@ -152,7 +172,6 @@
             display.innerHTML = `<div class="status-message">Awaiting location permission...</div>`;
             
             if (navigator.geolocation) {
-                // Requesting coordinates. If blocked before, this prompts the loop state via errorCallback
                 watchId = navigator.geolocation.watchPosition(successCallback, errorCallback, {
                     enableHighAccuracy: true,
                     timeout: 10000,
@@ -168,3 +187,4 @@
     </script>
 </body>
 </html>
+
