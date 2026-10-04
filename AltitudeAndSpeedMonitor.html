@@ -306,3 +306,28 @@
             altInput.value = Math.round(currentAltitude);
         }
 
+// Add wheel listeners to mimic input scroll transitions smoothly
+document.getElementById('speedWindow').addEventListener('wheel', (e) => {
+e.preventDefault();
+currentSpeed = Math.max(0, Math.min(400, currentSpeed - e.deltaY * 0.05));
+updateDisplay();
+});
+document.getElementById('altitudeWindow').addEventListener('wheel', (e) => {
+e.preventDefault();
+currentAltitude = Math.max(0, Math.min(5000, currentAltitude - e.deltaY * 0.1));
+updateDisplay();
+});
+// Add manual field changes sync link hooks
+speedInput.addEventListener('input', (e) => {
+let val = parseFloat(e.target.value) || 0;
+currentSpeed = Math.max(0, Math.min(400, val));
+updateDisplay();
+});
+altInput.addEventListener('input', (e) => {
+let val = parseFloat(e.target.value) || 0;
+currentAltitude = Math.max(0, Math.min(5000, val));
+updateDisplay();
+});
+// Fire initialization sequence
+initTapes();
+updateDisplay();
