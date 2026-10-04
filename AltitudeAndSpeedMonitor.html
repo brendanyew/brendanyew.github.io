@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Garmin PFD Tapes</title>
+    <title>Garmin PFD Tapes - Zero Centered</title>
     <style>
         :root {
-            --bg-color: #1a1a1a;
-            --panel-bg: rgba(20, 24, 30, 0.85);
-            --border-color: #555;
+            --bg-color: #0b0d11;
+            --panel-bg: #12161c;
+            --border-color: #4a525d;
             --text-color: #ffffff;
-            --accent-text: #00ff00;
-            --label-color: #aaaaaa;
-            --tape-width: 100px;
-            --tape-height: 400px;
+            --accent-green: #00ff00;
+            --tape-width: 95px;
+            --tape-height: 380px;
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Arial Black', 'Impact', sans-serif;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
@@ -29,182 +29,179 @@
             user-select: none;
         }
 
-        /* Container matching the overall layout layout */
         .pfd-container {
             display: flex;
-            gap: 150px;
-            padding: 40px;
-            background: #0f1115;
-            border: 4px solid #333;
-            border-radius: 12px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            gap: 120px;
+            padding: 30px 40px;
+            background: #181d24;
+            border: 5px solid #2d3440;
+            border-radius: 8px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.8);
             position: relative;
         }
 
-        /* Wrap columns with their header labels */
         .column-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
         .column-header {
-            font-size: 16px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            color: var(--text-color);
+            font-size: 15px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            color: #a2afc2;
         }
 
-        /* Individual tape windows */
         .tape-window {
             width: var(--tape-width);
             height: var(--tape-height);
             background: var(--panel-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 6px;
+            border: 3px solid var(--border-color);
+            border-radius: 4px;
             position: relative;
             overflow: hidden;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.9);
             cursor: ns-resize;
+            
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+            mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
         }
 
-        /* The actual long scrolling strips */
         .tape-strip {
             position: absolute;
             width: 100%;
             left: 0;
-            /* Dynamic smooth transition when matching values */
-            transition: transform 0.1s cubic-bezier(0.1, 0.8, 0.3, 1);
+            transition: transform 0.15s cubic-bezier(0.1, 0.8, 0.2, 1);
             will-change: transform;
         }
 
-        /* Individual unit tick items inside strips */
         .tick-item {
             position: absolute;
             width: 100%;
-            height: 40px; /* Base scaling: 40px per step interval */
+            height: 60px; /* Precise layout spacing per tick */
             display: flex;
             align-items: center;
             box-sizing: border-box;
         }
 
-        /* Left column labels align to the right, right column to the left */
         .speed-tape .tick-item {
             justify-content: flex-end;
-            padding-right: 35px;
+            padding-right: 32px;
         }
 
         .altitude-tape .tick-item {
             justify-content: flex-start;
-            padding-left: 35px;
+            padding-left: 32px;
         }
 
         .tick-text {
-            font-size: 18px;
-            font-weight: bold;
-            color: var(--text-color);
+            font-size: 22px;
+            font-weight: 900;
+            color: #e2e8f0;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
         }
 
-        /* Subtle ticks indicators mimicking physical lines */
         .tick-mark {
             position: absolute;
-            height: 2px;
-            background: #888;
+            height: 3px;
+            background: #8a96a8;
         }
 
         .speed-tape .tick-mark {
             right: 0;
-            width: 15px;
+            width: 18px;
         }
 
         .altitude-tape .tick-mark {
             left: 0;
-            width: 15px;
+            width: 18px;
         }
 
-        /* Centralized current target overlay windows */
+        /* Central overlay window box framing target readout text elements */
         .current-box {
             position: absolute;
-            top: calc(50% - 22px);
-            width: calc(var(--tape-width) + 16px);
-            height: 44px;
+            top: calc(50% - 24px);
+            width: calc(var(--tape-width) + 14px);
+            height: 48px;
             background: #000000;
-            border: 2px solid #ffffff;
+            border: 3px solid #ffffff;
             box-sizing: border-box;
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 10;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.7);
         }
 
         .speed-tape .current-box {
-            right: -8px;
+            right: -7px;
             border-radius: 4px 0 0 4px;
         }
 
         .altitude-tape .current-box {
-            left: -8px;
+            left: -7px;
             border-radius: 0 4px 4px 0;
         }
 
         .current-value {
-            font-size: 24px;
+            font-size: 26px;
             font-weight: 900;
-            color: var(--text-color);
+            color: #ffffff;
             font-variant-numeric: tabular-nums;
         }
 
-        /* Helper manual inputs underneath for demo visibility */
+        /* Utility interaction fields layout wrapper */
         .controls {
-            position: absolute;
-            bottom: -70px;
-            left: 0;
-            width: 100%;
+            margin-top: 30px;
             display: flex;
             justify-content: space-between;
-            gap: 20px;
+            gap: 30px;
         }
 
         .control-group {
             display: flex;
             align-items: center;
-            gap: 8px;
-            background: #222;
-            padding: 6px 12px;
+            gap: 10px;
+            background: #181d24;
+            padding: 8px 16px;
             border-radius: 6px;
-            border: 1px solid #444;
+            border: 2px solid #3e4654;
+        }
+
+        .control-group label {
+            font-size: 13px;
+            font-weight: bold;
+            color: #a2afc2;
         }
 
         .control-group input {
-            width: 70px;
-            background: #000;
-            border: 1px solid #666;
-            color: var(--accent-text);
-            font-size: 16px;
+            width: 80px;
+            background: #000000;
+            border: 1px solid #555;
+            color: var(--accent-green);
+            font-size: 18px;
             padding: 4px;
-            font-weight: bold;
+            font-weight: 900;
             border-radius: 4px;
             text-align: center;
         }
         
         .hint-text {
-            position: absolute;
-            top: -30px;
-            width: 100%;
-            text-align: center;
-            font-size: 12px;
-            color: #666;
+            color: #5a6575;
+            font-size: 13px;
+            margin-bottom: 15px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-    <div class="pfd-container">
-        <div class="hint-text">Scroll with mouse wheel over tapes or adjust boxes below to change values</div>
+    <div class="hint-text">💡 SCROLL OVER TAPES OR ADJUST BOXES BELOW TO TEST NEGATIVES</div>
 
-        <!-- LEFT TAPE: SPEED -->
+    <div class="pfd-container">
+        <!-- SPEED (LEFT) -->
         <div class="column-wrapper">
             <div class="column-header">SPEED (KM/H)</div>
             <div class="tape-window speed-tape" id="speedWindow">
@@ -215,7 +212,7 @@
             </div>
         </div>
 
-        <!-- RIGHT TAPE: ALTITUDE -->
+        <!-- ALTITUDE (RIGHT) -->
         <div class="column-wrapper">
             <div class="column-header">ALTITUDE (M)</div>
             <div class="tape-window altitude-tape" id="altitudeWindow">
@@ -225,34 +222,33 @@
                 <div class="tape-strip" id="altitudeStrip"></div>
             </div>
         </div>
+    </div>
 
-        <!-- BOTTOM CONTROLS FOR TESTING INTERACTION -->
-        <div class="controls">
-            <div class="control-group">
-                <label for="speedInput">Speed:</label>
-                <input type="number" id="speedInput" value="120" min="0" max="400">
-            </div>
-            <div class="control-group">
-                <label for="altInput">Alt:</label>
-                <input type="number" id="altInput" value="2490" min="0" max="5000">
-            </div>
+    <!-- UTILITY CONTROL DECK FOR EASY TESTING -->
+    <div class="controls">
+        <div class="control-group">
+            <label>SPEED DIAL:</label>
+            <input type="number" id="speedInput" value="0" min="-50" max="50">
+        </div>
+        <div class="control-group">
+            <label>ALTITUDE DIAL:</label>
+            <input type="number" id="altInput" value="0" min="-50" max="50">
         </div>
     </div>
 
     <script>
-        // Settings configuration matching criteria specs
         const config = {
-            pixelsPerUnit: 4, // 40px per 10 increments = 4px per single unit value
-            speedInterval: 10,
-            altitudeInterval: 10,
-            windowHeight: 400
+            pixelsPerUnit: 6, // 60px step heights per 10 unit intervals
+            interval: 10,
+            windowHeight: 380,
+            minLimit: -50,
+            maxLimit: 50
         };
 
-        // State trackers
-        let currentSpeed = 120;
-        let currentAltitude = 2490;
+        // Standardized system trackers launch sitting perfectly on 0
+        let currentSpeed = 0;
+        let currentAltitude = 0;
 
-        // Dom Elements
         const speedStrip = document.getElementById('speedStrip');
         const altitudeStrip = document.getElementById('altitudeStrip');
         const speedDisplay = document.getElementById('speedDisplay');
@@ -260,74 +256,62 @@
         const speedInput = document.getElementById('speedInput');
         const altInput = document.getElementById('altInput');
 
-        // Initialize tape strips contents dynamically
         function initTapes() {
-            // Populate Speed Strip (0 to 400 km/h in steps of 10)
-            for (let s = 0; s <= 400; s += config.speedInterval) {
-                const item = document.createElement('div');
-                item.className = 'tick-item';
-                // Calculate position relative to bottom zero scale
-                item.style.bottom = `${s * config.pixelsPerUnit}px`;
+            // Generates a structural loop tracking limits explicitly from -50 up to +50
+            for (let val = config.minLimit; val <= config.maxLimit; val += config.interval) {
+                // Calculate position relative to a zeroed center floor shift anchor
+                const offsetFromZero = val * config.pixelsPerUnit;
                 
-                item.innerHTML = `
-                    <span class="tick-text">${s}</span>
-                    <div class="tick-mark"></div>
-                `;
-                speedStrip.appendChild(item);
-            }
+                // SPEED ELEMENT BUILD
+                const sItem = document.createElement('div');
+                sItem.className = 'tick-item';
+                sItem.style.bottom = `calc(50% + ${offsetFromZero}px - 30px)`; // Center aligned box offset calculation logic
+                sItem.innerHTML = `<span class="tick-text">${val}</span><div class="tick-mark"></div>`;
+                speedStrip.appendChild(sItem);
 
-            // Populate Altitude Strip (0 to 5000 meters in steps of 10)
-            for (let a = 0; a <= 5000; a += config.altitudeInterval) {
-                const item = document.createElement('div');
-                item.className = 'tick-item';
-                item.style.bottom = `${a * config.pixelsPerUnit}px`;
-                
-                item.innerHTML = `
-                    <div class="tick-mark"></div>
-                    <span class="tick-text">${a}</span>
-                `;
-                altitudeStrip.appendChild(item);
+                // ALTITUDE ELEMENT BUILD
+                const aItem = document.createElement('div');
+                aItem.className = 'tick-item';
+                aItem.style.bottom = `calc(50% + ${offsetFromZero}px - 30px)`;
+                aItem.innerHTML = `<div class="tick-mark"></div><span class="tick-text">${val}</span>`;
+                altitudeStrip.appendChild(aItem);
             }
         }
 
-        // Refreshes translations on update cycles
         function updateDisplay() {
-            // Speed Translation updates
-            // Center element calculation offset: Window half height
-            const speedY = (currentSpeed * config.pixelsPerUnit) - (config.windowHeight / 2);
+            // Smoothly shift container track strips depending on target selection states
+            const speedY = currentSpeed * config.pixelsPerUnit;
             speedStrip.style.transform = `translateY(${speedY}px)`;
             speedDisplay.textContent = Math.round(currentSpeed);
             speedInput.value = Math.round(currentSpeed);
 
-            // Altitude Translation updates
-            const altY = (currentAltitude * config.pixelsPerUnit) - (config.windowHeight / 2);
+            const altY = currentAltitude * config.pixelsPerUnit;
             altitudeStrip.style.transform = `translateY(${altY}px)`;
             altitudeDisplay.textContent = Math.round(currentAltitude);
             altInput.value = Math.round(currentAltitude);
         }
 
-// Add wheel listeners to mimic input scroll transitions smoothly
-document.getElementById('speedWindow').addEventListener('wheel', (e) => {
-e.preventDefault();
-currentSpeed = Math.max(0, Math.min(400, currentSpeed - e.deltaY * 0.05));
+        // Mouse wheel scroll adjustments configurations updates hooks
+        document.getElementById('speedWindow').addEventListener('wheel', (e) => {
+            e.preventDefault();
+            currentSpeed = Math.max(config.minLimit, Math.min(config.maxLimit, currentSpeed - e.deltaY * 0.05));
+            updateDisplay();
+        });
+
+        document.getElementById('altitudeWindow').addEventListener('wheel', (e) => {
+currentAltitude = Math.max(config.minLimit, Math.min(config.maxLimit, currentAltitude - e.deltaY * 0.05));
 updateDisplay();
 });
-document.getElementById('altitudeWindow').addEventListener('wheel', (e) => {
-e.preventDefault();
-currentAltitude = Math.max(0, Math.min(5000, currentAltitude - e.deltaY * 0.1));
-updateDisplay();
-});
-// Add manual field changes sync link hooks
 speedInput.addEventListener('input', (e) => {
 let val = parseFloat(e.target.value) || 0;
-currentSpeed = Math.max(0, Math.min(400, val));
+currentSpeed = Math.max(config.minLimit, Math.min(config.maxLimit, val));
 updateDisplay();
 });
 altInput.addEventListener('input', (e) => {
 let val = parseFloat(e.target.value) || 0;
-currentAltitude = Math.max(0, Math.min(5000, val));
+currentAltitude = Math.max(config.minLimit, Math.min(config.maxLimit, val));
 updateDisplay();
 });
-// Fire initialization sequence
 initTapes();
 updateDisplay();
+
