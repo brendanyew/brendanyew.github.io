@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garmin PFD Tapes</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --panel-bg: rgba(20, 24, 30, 0.85);
+            --border-color: #555;
+            --text-color: #ffffff;
+            --accent-text: #00ff00;
+            --label-color: #aaaaaa;
+            --tape-width: 100px;
+            --tape-height: 400px;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Container matching the overall layout layout */
+        .pfd-container {
+            display: flex;
+            gap: 150px;
+            padding: 40px;
+            background: #0f1115;
+            border: 4px solid #333;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        /* Wrap columns with their header labels */
+        .column-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .column-header {
+            font-size: 16px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            color: var(--text-color);
+        }
+
+        /* Individual tape windows */
+        .tape-window {
+            width: var(--tape-width);
+            height: var(--tape-height);
+            background: var(--panel-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            cursor: ns-resize;
+        }
+
+        /* The actual long scrolling strips */
+        .tape-strip {
+            position: absolute;
+            width: 100%;
+            left: 0;
+            /* Dynamic smooth transition when matching values */
+            transition: transform 0.1s cubic-bezier(0.1, 0.8, 0.3, 1);
+            will-change: transform;
+        }
+
+        /* Individual unit tick items inside strips */
+        .tick-item {
+            position: absolute;
+            width: 100%;
+            height: 40px; /* Base scaling: 40px per step interval */
+            display: flex;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        /* Left column labels align to the right, right column to the left */
+        .speed-tape .tick-item {
+            justify-content: flex-end;
+            padding-right: 35px;
+        }
+
+        .altitude-tape .tick-item {
+            justify-content: flex-start;
+            padding-left: 35px;
+        }
+
+        .tick-text {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        /* Subtle ticks indicators mimicking physical lines */
+        .tick-mark {
+            position: absolute;
+            height: 2px;
+            background: #888;
+        }
+
+        .speed-tape .tick-mark {
+            right: 0;
+            width: 15px;
+        }
+
+        .altitude-tape .tick-mark {
+            left: 0;
+            width: 15px;
+        }
+
+        /* Centralized current target overlay windows */
+        .current-box {
+            position: absolute;
+            top: calc(50% - 22px);
+            width: calc(var(--tape-width) + 16px);
+            height: 44px;
+            background: #000000;
+            border: 2px solid #ffffff;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .speed-tape .current-box {
+            right: -8px;
+            border-radius: 4px 0 0 4px;
+        }
+
+        .altitude-tape .current-box {
+            left: -8px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .current-value {
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--text-color);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Helper manual inputs underneath for demo visibility */
+        .controls {
+            position: absolute;
+            bottom: -70px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #222;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #444;
+        }
+
+        .control-group input {
+            width: 70px;
+            background: #000;
+            border: 1px solid #666;
+            color: var(--accent-text);
+            font-size: 16px;
+            padding: 4px;
+            font-weight: bold;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .hint-text {
+            position: absolute;
+            top: -30px;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="pfd-container">
+        <div class="hint-text">Scroll with mouse wheel over tapes or adjust boxes below to change values</div>
+
+        <!-- LEFT TAPE: SPEED -->
+        <div class="column-wrapper">
+            <div class="column-header">SPEED (KM/H)</div>
+            <div class="tape-window speed-tape" id="speedWindow">
+                <div class="current-box">
+                    <div class="current-value" id="speedDisplay">0</div>
+                </div>
+                <div class="tape-strip" id="speedStrip"></div>
+            </div>
+        </div>
+
+        <!-- RIGHT TAPE: ALTITUDE -->
+        <div class="column-wrapper">
+            <div class="column-header">ALTITUDE (M)</div>
+            <div class="tape-window altitude-tape" id="altitudeWindow">
+                <div class="current-box">
+                    <div class="current-value" id="altitudeDisplay">0</div>
+                </div>
+                <div class="tape-strip" id="altitudeStrip"></div>
+            </div>
+        </div>
+
+        <!-- BOTTOM CONTROLS FOR TESTING INTERACTION -->
+        <div class="controls">
+            <div class="control-group">
+                <label for="speedInput">Speed:</label>
+                <input type="number" id="speedInput" value="120" min="0" max="400">
+            </div>
+            <div class="control-group">
+                <label for="altInput">Alt:</label>
+                <input type="number" id="altInput" value="2490" min="0" max="5000">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Settings configuration matching criteria specs
+        const config = {
+            pixelsPerUnit: 4, // 40px per 10 increments = 4px per single unit value
+            speedInterval: 10,
+            altitudeInterval: 10,
+            windowHeight: 400
+        };
+
+        // State trackers
+        let currentSpeed = 120;
+        let currentAltitude = 2490;
+
+        // Dom Elements
+        const speedStrip = document.getElementById('speedStrip');
+        const altitudeStrip = document.getElementById('altitudeStrip');
+        const speedDisplay = document.getElementById('speedDisplay');
+        const altitudeDisplay = document.getElementById('altitudeDisplay');
+        const speedInput = document.getElementById('speedInput');
+        const altInput = document.getElementById('altInput');
+
+        // Initialize tape strips contents dynamically
+        function initTapes() {
+            // Populate Speed Strip (0 to 400 km/h in steps of 10)
+            for (let s = 0; s <= 400; s += config.speedInterval) {
+                const item = document.createElement('div');
+                item.className = 'tick-item';
+                // Calculate position relative to bottom zero scale
+                item.style.bottom = `${s * config.pixelsPerUnit}px`;
+                
+                item.innerHTML = `
+                    <span class="tick-text">${s}</span>
+                    <div class="tick-mark"></div>
+                `;
+                speedStrip.appendChild(item);
+            }
+
+            // Populate Altitude Strip (0 to 5000 meters in steps of 10)
+            for (let a = 0; a <= 5000; a += config.altitudeInterval) {
+                const item = document.createElement('div');
+                item.className = 'tick-item';
+                item.style.bottom = `${a * config.pixelsPerUnit}px`;
+                
+                item.innerHTML = `
+                    <div class="tick-mark"></div>
+                    <span class="tick-text">${a}</span>
+                `;
+                altitudeStrip.appendChild(item);
+            }
+        }
+
+        // Refreshes translations on update cycles
+        function updateDisplay() {
+            // Speed Translation updates
+            // Center element calculation offset: Window half height
+            const speedY = (currentSpeed * config.pixelsPerUnit) - (config.windowHeight / 2);
+            speedStrip.style.transform = `translateY(${speedY}px)`;
+            speedDisplay.textContent = Math.round(currentSpeed);
+            speedInput.value = Math.round(currentSpeed);
+
+            // Altitude Translation updates
+            const altY = (currentAltitude * config.pixelsPerUnit) - (config.windowHeight / 2);
+            altitudeStrip.style.transform = `translateY(${altY}px)`;
+            altitudeDisplay.textContent = Math.round(currentAltitude);
+            altInput.value = Math.round(currentAltitude);
+        }
+
