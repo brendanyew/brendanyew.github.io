@@ -47,13 +47,18 @@
             margin: 15px 0;
             letter-spacing: 1px;
         }
+        .sim-indicator {
+            font-size: 0.8rem;
+            color: #a0a0a0;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
 
     <a href="index.html">
   <img src="Logo.png" alt="Brendan's Website">
-</a>
+</a>    
     <div class="container">
         <h1>Your Current Altitude and Speed</h1>
         
@@ -67,6 +72,7 @@
         <!-- Metrics Area -->
         <div class="metric" id="altitude-display">000000m</div>
         <div class="metric" id="speed-display">000000km/h</div>
+        <div id="mode-indicator" class="sim-indicator"></div>
     </div>
 
     <script>
@@ -74,38 +80,35 @@
         const networkStatusEl = document.getElementById('network-status');
         const altitudeEl = document.getElementById('altitude-display');
         const speedEl = document.getElementById('speed-display');
+        const modeIndicatorEl = document.getElementById('mode-indicator');
+
+        let isUsingSimulatedData = false;
+        let simAltitude = 24;  // Starting indoor simulation altitude (meters)
+        let simSpeed = 0;      // Starting speed
 
         function formatSixDigits(value) {
             let rounded = Math.max(0, Math.round(value));
             return String(rounded).padStart(6, '0');
         }
 
-        // Checks user-agent characteristics and screen layouts to determine if it is a mobile phone
         function isPhoneDevice() {
             const hasMobileUA = /Mobi|Android|iPhone|iPod/i.test(navigator.userAgent);
             const isSmallScreen = Math.min(window.screen.width, window.screen.height) < 768;
             const hasTouch = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
             
-            // If the browser supports the experimental userAgentData interface, we look there too
             if (navigator.userAgentData && typeof navigator.userAgentData.mobile === 'boolean') {
                 return navigator.userAgentData.mobile && isSmallScreen;
             }
-            
             return hasMobileUA || (isSmallScreen && hasTouch);
         }
 
         function detectLocalCarrier() {
             try {
                 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-                const lang = navigator.language || "";
-
                 if (tz.includes("Australia")) return "Telstra";
-                if (tz.includes("America") || lang.includes("en-US")) return "Verizon";
-                if (tz.includes("Europe/London") || lang.includes("en-GB")) return "EE";
-                if (tz.includes("Tokyo") || lang.includes("ja")) return "NTT Docomo";
-                if (tz.includes("Europe/Berlin") || lang.includes("de")) return "Telekom";
-                if (tz.includes("Europe/Paris")) return "Orange";
-                if (tz.includes("Calcutta") || lang.includes("en-IN")) return "Jio";
+                if (tz.includes("America")) return "Verizon";
+                if (tz.includes("Europe/London")) return "EE";
+                if (tz.includes("Tokyo")) return "NTT Docomo";
                 return "Cellular Network";
             } catch (e) {
                 return "Cellular";
@@ -113,37 +116,40 @@
         }
 
         function updateNetworkStatus() {
-            // 1. Explicitly check if offline
             if (!navigator.onLine) {
                 networkStatusEl.textContent = "NO CONNECT";
                 networkStatusEl.className = "net-no-connect";
                 return;
             }
 
-            // 2. Separate laptop/desktop context from handheld mobile devices
             if (!isPhoneDevice()) {
                 networkStatusEl.textContent = "NO SERVICE";
                 networkStatusEl.className = "net-sim";
                 return;
             }
 
-            // 3. Fallback mobile simulation block if it genuinely passes as a phone profile
-            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            const carrier = detectLocalCarrier();
+            const possibleBars =; 
+            const secondsIndex = Math.floor(new Date().getSeconds() / 12) % possibleBars.length;
+            const mockBars = possibleBars[secondsIndex];
+            const percentage = Math.round((mockBars / 5) * 100);
             
-            if (connection && connection.type && connection.type !== 'cellular') {
-                // If the phone is forced onto absolute non-mobile internet like fixed Ethernet bridging 
-                networkStatusEl.textContent = "NO SERVICE";
-                networkStatusEl.className = "net-sim";
-            } else {
-                const carrier = detectLocalCarrier();
-                const possibleBars = [4, 5, 3, 5, 4]; 
-                const secondsIndex = Math.floor(new Date().getSeconds() / 12) % possibleBars.length;
-                const mockBars = possibleBars[secondsIndex];
-                const percentage = Math.round((mockBars / 5) * 100);
-                
-                networkStatusEl.textContent = `${carrier} (${mockBars}/5)(${percentage}%)`;
-                networkStatusEl.className = "net-sim";
-            }
+            networkStatusEl.textContent = `${carrier} (${mockBars}/5)(${percentage}%)`;
+            networkStatusEl.className = "net-sim";
+        }
+
+        // Run simulation math when real hardware fails or is indoors
+        function runSimulation() {
+            isUsingSimulatedData = true;
+            modeIndicatorEl.textContent = "INDOOR HARDWARE FALLBACK ACTIVE";
+            
+            // Simulating slight altitude shifts (like walking between rooms/floors)
+            simAltitude += (Math.random() - 0.5) * 0.5; 
+            // Simulating pacing speed around an apartment (0 to 6 km/h)
+            simSpeed = 3.5 + (Math.sin(Date.now() / 5000) * 2.5);
+
+            altitudeEl.textContent = formatSixDigits(simAltitude) + 'm';
+            speedEl.textContent = formatSixDigits(simSpeed) + 'km/h';
         }
 
         window.addEventListener('online', updateNetworkStatus);
@@ -155,31 +161,48 @@
         if ("geolocation" in navigator) {
             navigator.geolocation.watchPosition(
                 (position) => {
-                    gpsStatusEl.textContent = "GPS ON";
-                    gpsStatusEl.className = "gps-on";
+                    const altitude = position.coords.altitude;
+                    const speedMPS = position.coords.speed;
 
-                    const altitude = position.coords.altitude !== null ? position.coords.altitude : 0;
-                    altitudeEl.textContent = formatSixDigits(altitude) + 'm';
-                    
-                    const speedMPS = position.coords.speed !== null ? position.coords.speed : 0;
-                    const speedKMH = speedMPS * 3.6;
-                    speedEl.textContent = formatSixDigits(speedKMH) + 'km/h';
+                    // If hardware reports absolute zeros, it means you are indoors/stationary. 
+                    // Let the simulation smoothly kick in so the app functions.
+                    if ((altitude === null || altitude === 0) && (speedMPS === null || speedMPS === 0)) {
+                        gpsStatusEl.textContent = "GPS OFF";
+                        gpsStatusEl.className = "gps-off";
+                        runSimulation();
+                    } else {
+                        // True outdoor GPS environment detected!
+                        isUsingSimulatedData = false;
+                        modeIndicatorEl.textContent = ""; 
+                        gpsStatusEl.textContent = "GPS ON";
+                        gpsStatusEl.className = "gps-on";
+
+                        altitudeEl.textContent = formatSixDigits(altitude) + 'm';
+                        const speedKMH = speedMPS * 3.6;
+                        speedEl.textContent = formatSixDigits(speedKMH) + 'km/h';
+                    }
                 },
                 (error) => {
                     gpsStatusEl.textContent = "GPS OFF";
                     gpsStatusEl.className = "gps-off";
+                    runSimulation();
                 },
                 {
                     enableHighAccuracy: true,
                     maximumAge: 0,
-                    timeout: 10000
+                    timeout: 6000
                 }
             );
         } else {
             gpsStatusEl.textContent = "GPS OFF";
             gpsStatusEl.className = "gps-off";
+            setInterval(runSimulation, 1000);
         }
+
+        // Keep local simulation cycling every second if active
+        setInterval(() => {
+            if (isUsingSimulatedData) runSimulation();
+        }, 1000);
     </script>
 </body>
 </html>
-
