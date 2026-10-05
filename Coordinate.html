@@ -104,14 +104,10 @@
 </head>
 <body>
 
-  <a href="index.html">
-  <img src="Logo.png" alt="Brendan's Website">
-</a>
     <div class="device-container">
         <h1>GPS Tracking Device</h1>
         <div id="gpsStatus" class="gps-status status-off">GPS Off</div>
         <div class="battery-badge">Battery Saving Mode On</div>
-        <!-- This line automatically switches based on connection style -->
         <div id="connectionStatus" class="connection-status conn-offline">No Connection</div>
         
         <div id="display" class="coordinate-display">
@@ -125,15 +121,26 @@
         const connectionStatus = document.getElementById('connectionStatus');
         let watchId = null;
 
-        // Monitor connection rules dynamically (Purely a dashboard visual label)
+        // Dynamic SIM Brand Database Array to make the fake dashboard look incredibly real
+        const simBrands = [
+            { name: "Optus", bars: "4/5", pct: "80%" },
+            { name: "Amaysim", bars: "2/5", pct: "40%" },
+            { name: "Telstra", bars: "5/5", pct: "100%" },
+            { name: "Vodafone", bars: "3/5", pct: "60%" },
+            { name: "Boost", bars: "4/5", pct: "83%" }
+        ];
+
+        // Randomly pick an item from the SIM database layout array when the app spins up
+        const activeSimProfile = simBrands[Math.floor(Math.random() * simBrands.length)];
+
+        // Monitor connection rules dynamically (Purely a visual dashboard label)
         function updateNetworkStatus() {
             if (navigator.onLine) {
-                // Read browser network metadata safely if available
                 const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
                 
-                // If browser detects cellular network type, print target layout format
+                // If browser detects cellular network type, print the randomly selected dynamic SIM layout
                 if (conn && conn.type === 'cellular') {
-                    connectionStatus.textContent = "Optus (4/5)(80%)";
+                    connectionStatus.textContent = `${activeSimProfile.name} (${activeSimProfile.bars})(${activeSimProfile.pct})`;
                     connectionStatus.className = "connection-status conn-online";
                 } else {
                     // Default fallback message for Wi-Fi or Desktop connections
@@ -147,7 +154,6 @@
             }
         }
 
-        // Hook up listener triggers to network cards
         window.addEventListener('online', updateNetworkStatus);
         window.addEventListener('offline', updateNetworkStatus);
         if (navigator.connection) {
@@ -235,7 +241,7 @@
             }
         }
 
-        // Initialize display rules concurrently
+        // Initialize display indicators together on application launch
         updateNetworkStatus();
         startTracking();
     </script>
