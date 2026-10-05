@@ -108,6 +108,7 @@
         <h1>GPS Tracking Device</h1>
         <div id="gpsStatus" class="gps-status status-off">GPS Off</div>
         <div class="battery-badge">Battery Saving Mode On</div>
+        <!-- Placement: Below battery-badge and above coordinate data display -->
         <div id="connectionStatus" class="connection-status conn-offline">No Connection</div>
         
         <div id="display" class="coordinate-display">
@@ -121,7 +122,7 @@
         const connectionStatus = document.getElementById('connectionStatus');
         let watchId = null;
 
-        // Dynamic SIM Brand Database Array to make the fake dashboard look incredibly real
+        // Dynamic SIM Brand database list profiles
         const simBrands = [
             { name: "Optus", bars: "4/5", pct: "80%" },
             { name: "Amaysim", bars: "2/5", pct: "40%" },
@@ -130,27 +131,27 @@
             { name: "Boost", bars: "4/5", pct: "83%" }
         ];
 
-        // Randomly pick an item from the SIM database layout array when the app spins up
+        // Cache a profile choice so it stays steady for the user's browser entry session
         const activeSimProfile = simBrands[Math.floor(Math.random() * simBrands.length)];
 
-        // Monitor connection rules dynamically (Purely a visual dashboard label)
+        // Monitor and update network indicator strings exactly in the right slots
         function updateNetworkStatus() {
             if (navigator.onLine) {
                 const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
                 
-                // If browser detects cellular network type, print the randomly selected dynamic SIM layout
+                // Condition A: If on a phone with an active mobile SIM data link
                 if (conn && conn.type === 'cellular') {
                     connectionStatus.textContent = `${activeSimProfile.name} (${activeSimProfile.bars})(${activeSimProfile.pct})`;
-                    connectionStatus.className = "connection-status conn-online";
+                    connectionStatus.className = "connection-status conn-online"; // Bright Blue
                 } else {
-                    // Default fallback message for Wi-Fi or Desktop connections
+                    // Condition B: Internet is on but it's a desktop or Wi-Fi link (No active SIM card tracking data slot)
                     connectionStatus.textContent = "No Service";
-                    connectionStatus.className = "connection-status conn-online";
+                    connectionStatus.className = "connection-status conn-online"; // Bright Blue
                 }
             } else {
-                // If completely disconnected or in airplane mode
+                // Condition C: Airplane mode or deep offline out in the wilderness
                 connectionStatus.textContent = "No Connection";
-                connectionStatus.className = "connection-status conn-offline";
+                connectionStatus.className = "connection-status conn-offline"; // Bright Red
             }
         }
 
@@ -188,7 +189,7 @@
             const minutesNotTruncated = (absolute - degrees) * 60;
             const minutes = Math.floor(minutesNotTruncated);
             
-            // Locked 4 decimal places for high-precision flight tracking
+            // 4 decimal places locked for supersonic millimetric flight tracking precision
             const seconds = ((minutesNotTruncated - minutes) * 60).toFixed(4);
 
             const strDegrees = String(degrees).padStart(isLongitude ? 3 : 2, '0');
@@ -241,7 +242,7 @@
             }
         }
 
-        // Initialize display indicators together on application launch
+        // Initialize layout engine states
         updateNetworkStatus();
         startTracking();
     </script>
