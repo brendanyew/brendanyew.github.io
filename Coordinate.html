@@ -44,6 +44,16 @@
         .status-on { color: #30d158; }  /* Light Green */
         .status-off { color: #ff3b30; } /* Bright Red */
 
+        /* Psychological Battery Badge Style */
+        .battery-badge {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 0.2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #30d158; /* Bright Green */
+        }
+
         /* Connection Reminder Text Styles */
         .connection-status {
             font-size: 1rem;
@@ -94,12 +104,14 @@
 </head>
 <body>
 
-<a href="index.html">
+    <a href="index.html">
   <img src="Logo.png" alt="Brendan's Website">
 </a>
     <div class="device-container">
         <h1>GPS Tracking Device</h1>
         <div id="gpsStatus" class="gps-status status-off">GPS Off</div>
+        <!-- Permanent decorative badge: Placed under GPS On/Off and above connection status -->
+        <div class="battery-badge">Battery Saving Mode On</div>
         <div id="connectionStatus" class="connection-status conn-offline">No Connection</div>
         
         <div id="display" class="coordinate-display">
@@ -214,4 +226,3 @@
     </script>
 </body>
 </html>
-
