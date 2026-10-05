@@ -44,7 +44,7 @@
         .status-on { color: #30d158; }  /* Light Green */
         .status-off { color: #ff3b30; } /* Bright Red */
 
-        /* Psychological Battery Badge Style */
+        /* Battery Badge Style */
         .battery-badge {
             font-size: 1rem;
             font-weight: bold;
@@ -54,7 +54,7 @@
             color: #30d158; /* Bright Green */
         }
 
-        /* Connection Reminder Text Styles */
+        /* Connection Text Styles */
         .connection-status {
             font-size: 1rem;
             font-weight: bold;
@@ -104,14 +104,14 @@
 </head>
 <body>
 
-    <a href="index.html">
+  <a href="index.html">
   <img src="Logo.png" alt="Brendan's Website">
 </a>
     <div class="device-container">
         <h1>GPS Tracking Device</h1>
         <div id="gpsStatus" class="gps-status status-off">GPS Off</div>
-        <!-- Permanent decorative badge: Placed under GPS On/Off and above connection status -->
         <div class="battery-badge">Battery Saving Mode On</div>
+        <!-- This line automatically switches based on connection style -->
         <div id="connectionStatus" class="connection-status conn-offline">No Connection</div>
         
         <div id="display" class="coordinate-display">
@@ -125,19 +125,34 @@
         const connectionStatus = document.getElementById('connectionStatus');
         let watchId = null;
 
-        // Monitor and update connection indicator text purely as a reminder layout element
+        // Monitor connection rules dynamically (Purely a dashboard visual label)
         function updateNetworkStatus() {
             if (navigator.onLine) {
-                connectionStatus.textContent = "No Service";
-                connectionStatus.className = "connection-status conn-online";
+                // Read browser network metadata safely if available
+                const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                
+                // If browser detects cellular network type, print target layout format
+                if (conn && conn.type === 'cellular') {
+                    connectionStatus.textContent = "Optus (4/5)(80%)";
+                    connectionStatus.className = "connection-status conn-online";
+                } else {
+                    // Default fallback message for Wi-Fi or Desktop connections
+                    connectionStatus.textContent = "No Service";
+                    connectionStatus.className = "connection-status conn-online";
+                }
             } else {
+                // If completely disconnected or in airplane mode
                 connectionStatus.textContent = "No Connection";
                 connectionStatus.className = "connection-status conn-offline";
             }
         }
 
+        // Hook up listener triggers to network cards
         window.addEventListener('online', updateNetworkStatus);
         window.addEventListener('offline', updateNetworkStatus);
+        if (navigator.connection) {
+            navigator.connection.addEventListener('change', updateNetworkStatus);
+        }
 
         // Convert decimal degrees to DMS format: N/S/E/W XXX°XX'XX.XXXX"
         function convertToDMS(decimal, isLongitude) {
@@ -167,7 +182,7 @@
             const minutesNotTruncated = (absolute - degrees) * 60;
             const minutes = Math.floor(minutesNotTruncated);
             
-            // Keeps 4 decimal places for maximum millimetric precision
+            // Locked 4 decimal places for high-precision flight tracking
             const seconds = ((minutesNotTruncated - minutes) * 60).toFixed(4);
 
             const strDegrees = String(degrees).padStart(isLongitude ? 3 : 2, '0');
@@ -220,9 +235,10 @@
             }
         }
 
-        // Initialize state indicators together on application launch
+        // Initialize display rules concurrently
         updateNetworkStatus();
         startTracking();
     </script>
 </body>
 </html>
+
