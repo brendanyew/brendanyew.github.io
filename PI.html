@@ -149,19 +149,19 @@
     window.addEventListener('online', updateConnectionStatus);
     window.addEventListener('offline', updateConnectionStatus);
     
-    // Listen for cellular network property updates if supported by browser
     if (navigator.connection) {
         navigator.connection.addEventListener('change', updateConnectionStatus);
     }
 
-    // Dynamic helper to gather SIM details or fall back to default values
-    function getSimDetails() {
-        let brand = "Optus"; 
-        let bars = 4; // Default simulated strong signal
-        
+    // Gathers actual SIM network properties or drops to (No Service)
+    function getNetworkString() {
         const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-        if (conn) {
-            // Estimate bars 1-5 based on downlink speed configurations
+        
+        // Check if the device is explicitly using a cellular/SIM data link
+        if (conn && conn.type === 'cellular') {
+            let brand = "Optus"; 
+            let bars = 5; // Default to maximum connection status strength
+            
             if (conn.downlink) {
                 if (conn.downlink < 1) bars = 1;
                 else if (conn.downlink < 3) bars = 2;
@@ -169,22 +169,24 @@
                 else if (conn.downlink < 15) bars = 4;
                 else bars = 5;
             }
+            
+            let percentage = (bars / 5) * 100;
+            return `(Optus (${bars}/5)(${percentage}%))`;
         }
         
-        let percentage = (bars / 5) * 100;
-        return `(${brand} (${bars}/5)(${percentage}%))`;
+        // Laptop Wi-Fi, Ethernet, or lack of cellular service falls back here
+        return "(No Service)";
     }
 
     function updateConnectionStatus() {
         if (isStreaming) {
-            // Maintain layout constraints during stream transitions
-            statusText.innerText = `Streaming...${getSimDetails()}`;
+            statusText.innerText = `Streaming...${getNetworkString()}`;
             statusText.className = "status-streaming";
             return;
         }
 
         if (navigator.onLine) {
-            statusText.innerText = `Ready ${getSimDetails()}`;
+            statusText.innerText = `Ready ${getNetworkString()}`;
             statusText.className = "status-ready";
             btnPlay.style.display = "block";
             btnConnect.style.display = "none";
@@ -217,13 +219,12 @@
         isStreaming = true;
         output.innerText = "3.";
         
-        statusText.innerText = `Streaming...${getSimDetails()}`;
+        statusText.innerText = `Streaming...${getNetworkString()}`;
         statusText.className = "status-streaming";
         btnPlay.style.display = "none";
         btnConnect.style.display = "none";
         btnStop.style.display = "block";
 
-        // Initialize Spigot algorithm variables for generator state
         let q = 1n, r = 0n, t = 1n, k = 1n, n = 3n, l = 3n;
         let count = 0;
 
@@ -234,7 +235,6 @@
                 return;
             }
 
-            // Generate digits using Lambert's formula spigot iteration
             while (count < maxDigits) {
                 if (4n * q + r - t < n * t) {
                     if (count > 0) {
@@ -263,11 +263,9 @@
                     n = nn;
                     r = nr;
                 }
-                
-                // Break loop execution to output next digit on next interval tick (creates stream effect)
                 break;
             }
-        }, 50); // Speed control: appends 1 digit every 50ms
+        }, 50);
     }
 
     function stopStreaming() {
@@ -276,8 +274,9 @@
         updateConnectionStatus();
     }
 
-    // Run string configuration checks upon script component load mounting points
+    // Initial page load mount processing execution execution
     updateConnectionStatus();
 </script>
 </body>
 </html>
+
