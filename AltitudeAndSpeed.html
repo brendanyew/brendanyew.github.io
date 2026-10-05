@@ -7,8 +7,8 @@
     <style>
         body {
             font-family: Arial, Helvetica, sans-serif;
-            background-color: #0d1117;
-            color: #c9d1d9;
+            background-color: #ffffff;
+            color: #000000;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -19,14 +19,11 @@
         .container {
             text-align: center;
             padding: 25px;
-            border: 1px solid #30363d;
-            border-radius: 6px;
-            background-color: #161b22;
             min-width: 340px;
         }
         h1 {
             font-size: 1.4rem;
-            color: #f0f6fc;
+            color: #000000;
             margin-bottom: 20px;
             margin-top: 0;
             font-weight: bold;
@@ -46,7 +43,7 @@
         .metric {
             font-size: 2.5rem;
             font-weight: bold;
-            color: #58a6ff;
+            color: #000000;
             margin: 15px 0;
             letter-spacing: 1px;
         }
@@ -83,7 +80,20 @@
             return String(rounded).padStart(6, '0');
         }
 
-        // Dynamically infers a realistic local SIM carrier based on user's locale/timezone
+        // Checks user-agent characteristics and screen layouts to determine if it is a mobile phone
+        function isPhoneDevice() {
+            const hasMobileUA = /Mobi|Android|iPhone|iPod/i.test(navigator.userAgent);
+            const isSmallScreen = Math.min(window.screen.width, window.screen.height) < 768;
+            const hasTouch = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+            
+            // If the browser supports the experimental userAgentData interface, we look there too
+            if (navigator.userAgentData && typeof navigator.userAgentData.mobile === 'boolean') {
+                return navigator.userAgentData.mobile && isSmallScreen;
+            }
+            
+            return hasMobileUA || (isSmallScreen && hasTouch);
+        }
+
         function detectLocalCarrier() {
             try {
                 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
@@ -96,33 +106,37 @@
                 if (tz.includes("Europe/Berlin") || lang.includes("de")) return "Telekom";
                 if (tz.includes("Europe/Paris")) return "Orange";
                 if (tz.includes("Calcutta") || lang.includes("en-IN")) return "Jio";
-                return "Cellular Network"; // Universal clean fallback
+                return "Cellular Network";
             } catch (e) {
                 return "Cellular";
             }
         }
 
         function updateNetworkStatus() {
-            // 1. Explicitly check if device is disconnected from internet
+            // 1. Explicitly check if offline
             if (!navigator.onLine) {
                 networkStatusEl.textContent = "NO CONNECT";
                 networkStatusEl.className = "net-no-connect";
                 return;
             }
 
-            // 2. Safely look for browser network indicators (Chrome/Android)
+            // 2. Separate laptop/desktop context from handheld mobile devices
+            if (!isPhoneDevice()) {
+                networkStatusEl.textContent = "NO SERVICE";
+                networkStatusEl.className = "net-sim";
+                return;
+            }
+
+            // 3. Fallback mobile simulation block if it genuinely passes as a phone profile
             const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
             
             if (connection && connection.type && connection.type !== 'cellular') {
-                // Connected via Wifi/Ethernet with no native mobile SIM interaction active
+                // If the phone is forced onto absolute non-mobile internet like fixed Ethernet bridging 
                 networkStatusEl.textContent = "NO SERVICE";
                 networkStatusEl.className = "net-sim";
             } else {
-                // Device is on a flexible mobile simulation loop
                 const carrier = detectLocalCarrier();
-                
-                // Generates a realistic fluctuating signal state (e.g. 3/5, 4/5, 5/5)
-                const possibleBars = [4, 5, 5, 3, 5]; 
+                const possibleBars = [4, 5, 3, 5, 4]; 
                 const secondsIndex = Math.floor(new Date().getSeconds() / 12) % possibleBars.length;
                 const mockBars = possibleBars[secondsIndex];
                 const percentage = Math.round((mockBars / 5) * 100);
@@ -132,15 +146,12 @@
             }
         }
 
-        // Track live platform network changes 
         window.addEventListener('online', updateNetworkStatus);
         window.addEventListener('offline', updateNetworkStatus);
         
-        // Check condition every few seconds to refresh changing signal bar calculations smoothly
         setInterval(updateNetworkStatus, 4000);
         updateNetworkStatus();
 
-        // Geolocation Monitoring Logic
         if ("geolocation" in navigator) {
             navigator.geolocation.watchPosition(
                 (position) => {
@@ -171,3 +182,4 @@
     </script>
 </body>
 </html>
+
