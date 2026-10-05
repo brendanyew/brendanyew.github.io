@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flexible Altitude and Speed Tracker</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            padding: 25px;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            background-color: #161b22;
+            min-width: 340px;
+        }
+        h1 {
+            font-size: 1.4rem;
+            color: #f0f6fc;
+            margin-bottom: 20px;
+            margin-top: 0;
+            font-weight: bold;
+        }
+        .status-block {
+            margin-bottom: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            line-height: 1.6;
+        }
+        .gps-on { color: #00ff00; }
+        .gps-off { color: #ff0000; }
+        .battery-status { color: #00ff00; }
+        .net-no-connect { color: #ff0000; }
+        .net-sim { color: #00d2ff; }
+        
+        .metric {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #58a6ff;
+            margin: 15px 0;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="index.html">
+  <img src="Logo.png" alt="Brendan's Website">
+</a>
+    <div class="container">
+        <h1>Your Current Altitude and Speed</h1>
+        
+        <!-- Status Display Area -->
+        <div class="status-block">
+            <div id="gps-status" class="gps-off">GPS OFF</div>
+            <div class="battery-status">BATTERY SAVING MODE ON</div>
+            <div id="network-status" class="net-no-connect">NO CONNECT</div>
+        </div>
+
+        <!-- Metrics Area -->
+        <div class="metric" id="altitude-display">000000m</div>
+        <div class="metric" id="speed-display">000000km/h</div>
+    </div>
+
+    <script>
+        const gpsStatusEl = document.getElementById('gps-status');
+        const networkStatusEl = document.getElementById('network-status');
+        const altitudeEl = document.getElementById('altitude-display');
+        const speedEl = document.getElementById('speed-display');
+
+        function formatSixDigits(value) {
+            let rounded = Math.max(0, Math.round(value));
+            return String(rounded).padStart(6, '0');
+        }
+
+        // Dynamically infers a realistic local SIM carrier based on user's locale/timezone
+        function detectLocalCarrier() {
+            try {
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+                const lang = navigator.language || "";
+
+                if (tz.includes("Australia")) return "Telstra";
+                if (tz.includes("America") || lang.includes("en-US")) return "Verizon";
+                if (tz.includes("Europe/London") || lang.includes("en-GB")) return "EE";
+                if (tz.includes("Tokyo") || lang.includes("ja")) return "NTT Docomo";
+                if (tz.includes("Europe/Berlin") || lang.includes("de")) return "Telekom";
+                if (tz.includes("Europe/Paris")) return "Orange";
+                if (tz.includes("Calcutta") || lang.includes("en-IN")) return "Jio";
+                return "Cellular Network"; // Universal clean fallback
+            } catch (e) {
+                return "Cellular";
+            }
+        }
+
+        function updateNetworkStatus() {
+            // 1. Explicitly check if device is disconnected from internet
+            if (!navigator.onLine) {
+                networkStatusEl.textContent = "NO CONNECT";
+                networkStatusEl.className = "net-no-connect";
+                return;
+            }
+
+            // 2. Safely look for browser network indicators (Chrome/Android)
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            
+            if (connection && connection.type && connection.type !== 'cellular') {
+                // Connected via Wifi/Ethernet with no native mobile SIM interaction active
+                networkStatusEl.textContent = "NO SERVICE";
+                networkStatusEl.className = "net-sim";
+            } else {
+                // Device is on a flexible mobile simulation loop
+                const carrier = detectLocalCarrier();
+                
+                // Generates a realistic fluctuating signal state (e.g. 3/5, 4/5, 5/5)
+                const possibleBars = [4, 5, 5, 3, 5]; 
+                const secondsIndex = Math.floor(new Date().getSeconds() / 12) % possibleBars.length;
+                const mockBars = possibleBars[secondsIndex];
+                const percentage = Math.round((mockBars / 5) * 100);
+                
+                networkStatusEl.textContent = `${carrier} (${mockBars}/5)(${percentage}%)`;
+                networkStatusEl.className = "net-sim";
+            }
+        }
+
+        // Track live platform network changes 
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+        
+        // Check condition every few seconds to refresh changing signal bar calculations smoothly
+        setInterval(updateNetworkStatus, 4000);
+        updateNetworkStatus();
+
+        // Geolocation Monitoring Logic
+        if ("geolocation" in navigator) {
+            navigator.geolocation.watchPosition(
+                (position) => {
+                    gpsStatusEl.textContent = "GPS ON";
+                    gpsStatusEl.className = "gps-on";
+
+                    const altitude = position.coords.altitude !== null ? position.coords.altitude : 0;
+                    altitudeEl.textContent = formatSixDigits(altitude) + 'm';
+                    
+                    const speedMPS = position.coords.speed !== null ? position.coords.speed : 0;
+                    const speedKMH = speedMPS * 3.6;
+                    speedEl.textContent = formatSixDigits(speedKMH) + 'km/h';
+                },
+                (error) => {
+                    gpsStatusEl.textContent = "GPS OFF";
+                    gpsStatusEl.className = "gps-off";
+                },
+                {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 10000
+                }
+            );
+        } else {
+            gpsStatusEl.textContent = "GPS OFF";
+            gpsStatusEl.className = "gps-off";
+        }
+    </script>
+</body>
+</html>
