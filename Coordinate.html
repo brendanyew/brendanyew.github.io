@@ -62,7 +62,7 @@
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-        .conn-online { color: #007aff; }  /* Bright Blue (#007aff) */
+        .conn-online { color: #007aff; }  /* Bright Blue */
         .conn-offline { color: #ff3b30; } /* Bright Red */
 
         .coordinate-display {
@@ -76,9 +76,9 @@
 
         /* Rule 4: Dynamic Direction Color Rules */
         .north { color: #ff3b30; } /* Red */
-        .south { color: #007aff; } /* Blue (#007aff) */
+        .south { color: #007aff; } /* Blue */
         .east  { color: #ffcc00; text-shadow: 1px 1px 1px rgba(0,0,0,0.15); } /* Yellow */
-        .west  { color: #34c759; } /* Green (#34c759) */
+        .west  { color: #34c759; } /* Green */
 
         .status-message {
             font-size: 1.1rem;
@@ -104,15 +104,12 @@
 </head>
 <body>
 
-<a href="index.html">
-  <img src="Logo.png" alt="Brendan's Website">
-</a>
     <div class="device-container">
         <h1>GPS Tracking Device</h1>
         <div id="gpsStatus" class="gps-status status-off">GPS Off</div>
         <div class="battery-badge">Battery Saving Mode On</div>
-        <!-- Placement: Below battery-badge and above coordinate data display -->
-        <div id="connectionStatus" class="connection-status conn-offline">No Connection</div>
+        <!-- CHANGED TEXT OPTION HERE TO NO CONNECT -->
+        <div id="connectionStatus" class="connection-status conn-offline">No Connect</div>
         
         <div id="display" class="coordinate-display">
             <div class="status-message">Awaiting location permission...</div>
@@ -125,7 +122,7 @@
         const connectionStatus = document.getElementById('connectionStatus');
         let watchId = null;
 
-        // Dynamic SIM Brand database list profiles
+        // Dynamic SIM Brand Database Array
         const simBrands = [
             { name: "Optus", bars: "4/5", pct: "80%" },
             { name: "Amaysim", bars: "2/5", pct: "40%" },
@@ -134,7 +131,6 @@
             { name: "Boost", bars: "4/5", pct: "83%" }
         ];
 
-        // Cache a profile choice so it stays steady for the user's browser entry session
         const activeSimProfile = simBrands[Math.floor(Math.random() * simBrands.length)];
 
         // Monitor and update network indicator strings exactly in the right slots
@@ -142,19 +138,17 @@
             if (navigator.onLine) {
                 const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
                 
-                // Condition A: If on a phone with an active mobile SIM data link
                 if (conn && conn.type === 'cellular') {
                     connectionStatus.textContent = `${activeSimProfile.name} (${activeSimProfile.bars})(${activeSimProfile.pct})`;
-                    connectionStatus.className = "connection-status conn-online"; // Bright Blue
+                    connectionStatus.className = "connection-status conn-online";
                 } else {
-                    // Condition B: Internet is on but it's a desktop or Wi-Fi link (No active SIM card tracking data slot)
                     connectionStatus.textContent = "No Service";
-                    connectionStatus.className = "connection-status conn-online"; // Bright Blue
+                    connectionStatus.className = "connection-status conn-online";
                 }
             } else {
-                // Condition C: Airplane mode or deep offline out in the wilderness
-                connectionStatus.textContent = "No Connection";
-                connectionStatus.className = "connection-status conn-offline"; // Bright Red
+                // CHANGED TEXT STRING HERE TO NO CONNECT
+                connectionStatus.textContent = "No Connect";
+                connectionStatus.className = "connection-status conn-offline";
             }
         }
 
