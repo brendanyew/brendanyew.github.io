@@ -47,13 +47,20 @@
             margin: 15px 0;
             letter-spacing: 1px;
         }
+
+        /* Styling to make the capitalized units slightly smaller than the numbers */
+        .unit {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-left: 2px;
+        }
     </style>
 </head>
 <body>
 
     <a href="index.html">
-  <img src="Logo.png" alt="Brendan's Website">
-</a>
+        <img src="Logo.png" alt="Brendan's Website">
+    </a>
     <div class="container">
         <h1>Your Current Altitude and Speed</h1>
         
@@ -64,9 +71,9 @@
             <div id="network-status" class="net-no-connect">NO CONNECT</div>
         </div>
 
-        <!-- Metrics Area -->
-        <div class="metric" id="altitude-display">000000m</div>
-        <div class="metric" id="speed-display">000000km/h</div>
+        <!-- Metrics Area: Initialized with dashes for the default GPS OFF state -->
+        <div class="metric" id="altitude-display">------<span class="unit">M</span></div>
+        <div class="metric" id="speed-display">------<span class="unit">KM/H</span></div>
     </div>
 
     <script>
@@ -75,9 +82,18 @@
         const altitudeEl = document.getElementById('altitude-display');
         const speedEl = document.getElementById('speed-display');
 
+        // Formats values to exactly 6 digits while safely keeping negative signs intact
         function formatSixDigits(value) {
-            let rounded = Math.max(0, Math.round(value));
-            return String(rounded).padStart(6, '0');
+            let isNegative = value < 0;
+            let absoluteRounded = Math.round(Math.abs(value));
+            let paddedString = String(absoluteRounded).padStart(6, '0');
+            return isNegative ? '-' + paddedString.substring(1) : paddedString;
+        }
+
+        // Sets displays to raw fallback dashes when satellites disconnect
+        function setDashesOnDisconnect() {
+            altitudeEl.innerHTML = `------<span class="unit">M</span>`;
+            speedEl.innerHTML = `------<span class="unit">KM/H</span>`;
         }
 
         // Checks user-agent characteristics and screen layouts to determine if it is a mobile phone
@@ -86,7 +102,6 @@
             const isSmallScreen = Math.min(window.screen.width, window.screen.height) < 768;
             const hasTouch = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
             
-            // If the browser supports the experimental userAgentData interface, we look there too
             if (navigator.userAgentData && typeof navigator.userAgentData.mobile === 'boolean') {
                 return navigator.userAgentData.mobile && isSmallScreen;
             }
@@ -113,30 +128,26 @@
         }
 
         function updateNetworkStatus() {
-            // 1. Explicitly check if offline
             if (!navigator.onLine) {
                 networkStatusEl.textContent = "NO CONNECT";
                 networkStatusEl.className = "net-no-connect";
                 return;
             }
 
-            // 2. Separate laptop/desktop context from handheld mobile devices
             if (!isPhoneDevice()) {
                 networkStatusEl.textContent = "NO SERVICE";
                 networkStatusEl.className = "net-sim";
                 return;
             }
 
-            // 3. Fallback mobile simulation block if it genuinely passes as a phone profile
             const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
             
             if (connection && connection.type && connection.type !== 'cellular') {
-                // If the phone is forced onto absolute non-mobile internet like fixed Ethernet bridging 
                 networkStatusEl.textContent = "NO SERVICE";
                 networkStatusEl.className = "net-sim";
             } else {
                 const carrier = detectLocalCarrier();
-                const possibleBars = [4, 5, 3, 5, 4]; 
+                const possibleBars =; 
                 const secondsIndex = Math.floor(new Date().getSeconds() / 12) % possibleBars.length;
                 const mockBars = possibleBars[secondsIndex];
                 const percentage = Math.round((mockBars / 5) * 100);
@@ -159,15 +170,16 @@
                     gpsStatusEl.className = "gps-on";
 
                     const altitude = position.coords.altitude !== null ? position.coords.altitude : 0;
-                    altitudeEl.textContent = formatSixDigits(altitude) + 'm';
+                    altitudeEl.innerHTML = `${formatSixDigits(altitude)}<span class="unit">M</span>`;
                     
-                    const speedMPS = position.coords.speed !== null ? position.coords.speed : 0;
+                    const speedMPS = position.coords.speed !== null && position.coords.speed >= 0 ? position.coords.speed : 0;
                     const speedKMH = speedMPS * 3.6;
-                    speedEl.textContent = formatSixDigits(speedKMH) + 'km/h';
+                    speedEl.innerHTML = `${formatSixDigits(speedKMH)}<span class="unit">KM/H</span>`;
                 },
                 (error) => {
                     gpsStatusEl.textContent = "GPS OFF";
                     gpsStatusEl.className = "gps-off";
+                    setDashesOnDisconnect();
                 },
                 {
                     enableHighAccuracy: true,
@@ -178,7 +190,9 @@
         } else {
             gpsStatusEl.textContent = "GPS OFF";
             gpsStatusEl.className = "gps-off";
+            setDashesOnDisconnect();
         }
     </script>
 </body>
 </html>
+
