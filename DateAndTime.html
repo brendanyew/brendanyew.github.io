@@ -8,7 +8,7 @@
         body {
             background-color: #000000;
             color: #ffffff;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -34,7 +34,6 @@
             margin-bottom: 25px;
         }
 
-        /* Makes the AM/PM label smaller than the numbers, matching the sketch */
         .ampm-display {
             font-size: 1.8rem;
             font-weight: normal;
@@ -54,12 +53,19 @@
             text-transform: uppercase;
         }
 
+        .alarm-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 25px;
+        }
+
         .alarm-status {
             font-size: 1.5rem;
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 12px;
+            font-weight: bold;
         }
 
         .alarm-icon {
@@ -70,18 +76,25 @@
         .alarm-text {
             color: #ff0000;
         }
+
+        .back-link {
+            color: #ffffff;
+            font-size: 1.5rem;
+            text-decoration: underline;
+        }
+
+        .back-link:hover {
+            color: #cccccc;
+        }
     </style>
 </head>
 <body>
 
-    <a href="index.html">
-  <img src="Logo.png" alt="Brendan's Website">
-</a>
     <div class="clock-container">
         <!-- Heading -->
         <h1>Date and Time</h1>
 
-        <!-- XX:XX:XX.XX PM/AM (With scaled down period indicator) -->
+        <!-- XX:XX:XX.XX PM/AM -->
         <div class="time-display">
             <span id="digits">00:00:00.00</span><span class="ampm-display" id="ampm">AM</span>
         </div>
@@ -92,10 +105,13 @@
             <div class="date-display" id="date">00/00/0000</div>
         </div>
 
-        <!-- Alarm Section -->
-        <div class="alarm-status">
-            <span class="alarm-icon">⏰</span>
-            <span class="alarm-text">ALARM OFF</span>
+        <!-- Alarm & Navigation Row -->
+        <div class="alarm-row">
+            <div class="alarm-status">
+                <span class="alarm-icon">⏰</span>
+                <span class="alarm-text">ALARM OFF</span>
+            </div>
+            <a href="http://brendanyew.com" class="back-link">Go back</a>
         </div>
     </div>
 
