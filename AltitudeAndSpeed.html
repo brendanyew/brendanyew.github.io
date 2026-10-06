@@ -51,9 +51,6 @@
 </head>
 <body>
 
-    <a href="index.html">
-  <img src="Logo.png" alt="Brendan's Website">
-</a>
     <div class="container">
         <h1>Your Current Altitude and Speed</h1>
         
@@ -86,6 +83,7 @@
             const isSmallScreen = Math.min(window.screen.width, window.screen.height) < 768;
             const hasTouch = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
             
+            // If the browser supports the experimental userAgentData interface, we look there too
             if (navigator.userAgentData && typeof navigator.userAgentData.mobile === 'boolean') {
                 return navigator.userAgentData.mobile && isSmallScreen;
             }
@@ -96,10 +94,15 @@
         function detectLocalCarrier() {
             try {
                 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+                const lang = navigator.language || "";
+
                 if (tz.includes("Australia")) return "Telstra";
-                if (tz.includes("America")) return "Verizon";
-                if (tz.includes("Europe/London")) return "EE";
-                if (tz.includes("Tokyo")) return "NTT Docomo";
+                if (tz.includes("America") || lang.includes("en-US")) return "Verizon";
+                if (tz.includes("Europe/London") || lang.includes("en-GB")) return "EE";
+                if (tz.includes("Tokyo") || lang.includes("ja")) return "NTT Docomo";
+                if (tz.includes("Europe/Berlin") || lang.includes("de")) return "Telekom";
+                if (tz.includes("Europe/Paris")) return "Orange";
+                if (tz.includes("Calcutta") || lang.includes("en-IN")) return "Jio";
                 return "Cellular Network";
             } catch (e) {
                 return "Cellular";
@@ -125,11 +128,12 @@
             const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
             
             if (connection && connection.type && connection.type !== 'cellular') {
+                // If the phone is forced onto absolute non-mobile internet like fixed Ethernet bridging 
                 networkStatusEl.textContent = "NO SERVICE";
                 networkStatusEl.className = "net-sim";
             } else {
                 const carrier = detectLocalCarrier();
-                const possibleBars =; 
+                const possibleBars = [4, 5, 3, 5, 4]; 
                 const secondsIndex = Math.floor(new Date().getSeconds() / 12) % possibleBars.length;
                 const mockBars = possibleBars[secondsIndex];
                 const percentage = Math.round((mockBars / 5) * 100);
@@ -175,4 +179,3 @@
     </script>
 </body>
 </html>
-
