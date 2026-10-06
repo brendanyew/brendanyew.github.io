@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Date and Time Clock</title>
+    <style>
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .clock-container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: normal;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        .time-display {
+            font-size: 4rem;
+            font-weight: bold;
+            margin-bottom: 25px;
+        }
+
+        /* Makes the AM/PM label smaller than the numbers, matching the sketch */
+        .ampm-display {
+            font-size: 1.8rem;
+            font-weight: normal;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        .date-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+        }
+
+        .day-display {
+            text-transform: uppercase;
+        }
+
+        .alarm-status {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .alarm-icon {
+            color: #ffffff;
+            font-size: 1.8rem;
+        }
+
+        .alarm-text {
+            color: #ff0000;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="index.html">
+  <img src="Logo.png" alt="Brendan's Website">
+</a>
+    <div class="clock-container">
+        <!-- Heading -->
+        <h1>Date and Time</h1>
+
+        <!-- XX:XX:XX.XX PM/AM (With scaled down period indicator) -->
+        <div class="time-display">
+            <span id="digits">00:00:00.00</span><span class="ampm-display" id="ampm">AM</span>
+        </div>
+
+        <!-- DAY & DD/MM/YYYY Row -->
+        <div class="date-container">
+            <div class="day-display" id="day">LOADING</div>
+            <div class="date-display" id="date">00/00/0000</div>
+        </div>
+
+        <!-- Alarm Section -->
+        <div class="alarm-status">
+            <span class="alarm-icon">⏰</span>
+            <span class="alarm-text">ALARM OFF</span>
+        </div>
+    </div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+
+            // 1. Format Time Digits (HH:MM:SS.CC)
+            let hours = now.getHours();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; 
+            
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            // Get milliseconds and convert to 2-digit centiseconds (.XX)
+            const centiseconds = String(Math.floor(now.getMilliseconds() / 10)).padStart(2, '0');
+
+            const digitsString = `${String(hours).padStart(2, '0')}:${minutes}:${seconds}.${centiseconds}`;
+            
+            document.getElementById('digits').textContent = digitsString;
+            document.getElementById('ampm').textContent = ampm;
+
+            // 2. Format Day (e.g., TUESDAY)
+            const daysOfWeek = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+            document.getElementById('day').textContent = daysOfWeek[now.getDay()];
+
+            // 3. Format Date (DD/MM/YYYY)
+            const dayOfMonth = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0'); 
+            const year = now.getFullYear();
+
+            document.getElementById('date').textContent = `${dayOfMonth}/${month}/${year}`;
+        }
+
+        // Run the clock immediately and refresh every 10 milliseconds
+        updateClock();
+        setInterval(updateClock, 10);
+    </script>
+</body>
+</html>
+
