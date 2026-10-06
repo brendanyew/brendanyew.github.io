@@ -31,15 +31,15 @@
         }
 
         .gps-on, .battery-saving {
-            color: #00FF00;
+            color: #00FF00; /* Lime */
         }
 
         .gps-off, .no-connect {
-            color: #FF0000;
+            color: #FF0000; /* Bright Red */
         }
 
         .no-service {
-            color: #00BFFF;
+            color: #00BFFF; /* Bright Light Blue */
         }
 
         .sim-detected {
@@ -153,50 +153,52 @@
         let signalPercentage = 0;
 
         function checkSystemStatus() {
+            // Check if device hardware matches a phone/mobile agent configuration
+            const isMobileDevice = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+            // 1. Automatic GPS Status Detection using Geolocation API
             if ("geolocation" in navigator) {
                 navigator.geolocation.getCurrentPosition(
                     function(position) {
                         isGpsOn = true;
-                        updateStatusUI();
+                        updateStatusUI(isMobileDevice);
                     },
                     function(error) {
                         isGpsOn = false;
-                        updateStatusUI();
+                        updateStatusUI(isMobileDevice);
                     },
-                    { timeout: 5000 }
+                    { timeout: 3000 }
                 );
             } else {
                 isGpsOn = false;
-                updateStatusUI();
+                updateStatusUI(isMobileDevice);
             }
 
+            // 2. Network connection logic validation
             if (navigator.onLine) {
-                const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-                if (conn) {
-                    if (conn.type === 'cellular' || ['2g', '3g', '4g'].includes(conn.effectiveType)) {
+                if (!isMobileDevice) {
+                    // Force laptops/desktops to display Bright Blue "NO SERVICE" state
+                    connectionType = "noservice";
+                } else {
+                    // Mobile device specific connection diagnostics
+                    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                    if (conn && (conn.type === 'cellular' || ['2g', '3g', '4g'].includes(conn.effectiveType))) {
                         connectionType = "connected";
-                        simBrand = "Mobile Carrier";
-                        if (conn.saveData) {
-                            signalBars = 2;
-                            signalPercentage = 45;
-                        } else {
-                            signalBars = conn.effectiveType === '4g' ? 5 : 3;
-                            signalPercentage = conn.effectiveType === '4g' ? 92 : 68;
-                        }
+                        simBrand = "SIM Brand";
+                        signalBars = conn.effectiveType === '4g' ? 5 : 4;
+                        signalPercentage = conn.effectiveType === '4g' ? 92 : 78;
                     } else {
                         connectionType = "noservice";
                     }
-                } else {
-                    connectionType = "noservice";
                 }
             } else {
                 connectionType = "noconnect";
             }
 
-            updateStatusUI();
+            updateStatusUI(isMobileDevice);
         }
 
-        function updateStatusUI() {
+        function updateStatusUI(isMobileDevice) {
             const gpsStatusDiv = document.getElementById('gpsStatus');
             if (isGpsOn) {
                 gpsStatusDiv.textContent = "GPS ON";
@@ -213,9 +215,13 @@
             } else if (connectionType === 'noservice') {
                 connStatusDiv.textContent = "NO SERVICE";
                 connStatusDiv.className = "no-service";
-            } else if (connectionType === 'connected') {
+            } else if (connectionType === 'connected' && isMobileDevice) {
                 connStatusDiv.textContent = `${simBrand} (${signalBars}/5) (${signalPercentage}%)`;
                 connStatusDiv.className = "sim-detected";
+            } else {
+                // Catch-all safety configuration for desktops connected via wi-fi/ethernet lines
+                connStatusDiv.textContent = "NO SERVICE";
+                connStatusDiv.className = "no-service";
             }
 
             validateForm();
@@ -262,4 +268,5 @@
     </script>
 </body>
 </html>
+
 
