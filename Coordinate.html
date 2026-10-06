@@ -41,7 +41,7 @@
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-        .status-on { color: #30d158; }  /* Light Green */
+        .status-on { color: #00FF00; }  /* Lime Color #00FF00 */
         .status-off { color: #ff3b30; } /* Bright Red */
 
         /* Battery Badge Style */
@@ -51,7 +51,7 @@
             margin-bottom: 0.2rem;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: #30d158; /* Bright Green */
+            color: #00FF00; /* Lime Color #00FF00 */
         }
 
         /* Connection Text Styles */
@@ -78,7 +78,7 @@
         .north { color: #ff3b30; } /* Red */
         .south { color: #007aff; } /* Blue */
         .east  { color: #ffcc00; text-shadow: 1px 1px 1px rgba(0,0,0,0.15); } /* Yellow */
-        .west  { color: #34c759; } /* Green */
+        .west  { color: #00FF00; } /* UPDATED: West is now Lime Color #00FF00 */
 
         .status-message {
             font-size: 1.1rem;
@@ -111,7 +111,6 @@
         <h1>GPS Tracking Device</h1>
         <div id="gpsStatus" class="gps-status status-off">GPS Off</div>
         <div class="battery-badge">Battery Saving Mode On</div>
-        <!-- CHANGED TEXT OPTION HERE TO NO CONNECT -->
         <div id="connectionStatus" class="connection-status conn-offline">No Connect</div>
         
         <div id="display" class="coordinate-display">
@@ -149,7 +148,6 @@
                     connectionStatus.className = "connection-status conn-online";
                 }
             } else {
-                // CHANGED TEXT STRING HERE TO NO CONNECT
                 connectionStatus.textContent = "No Connect";
                 connectionStatus.className = "connection-status conn-offline";
             }
@@ -180,7 +178,7 @@
                     cssClass = "east";
                 } else {
                     direction = "W";
-                    cssClass = "west";
+                    cssClass = "west"; // Tracks to the .west lime style class block
                 }
             }
 
@@ -248,4 +246,5 @@
     </script>
 </body>
 </html>
+
 
