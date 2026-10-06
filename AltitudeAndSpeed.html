@@ -48,7 +48,7 @@
             letter-spacing: 1px;
         }
 
-        /* Styling to make the capitalized units slightly smaller than the numbers */
+        /* Styles units to be capitalized and slightly smaller than the numbers */
         .unit {
             font-size: 1.5rem;
             font-weight: bold;
@@ -71,7 +71,7 @@
             <div id="network-status" class="net-no-connect">NO CONNECT</div>
         </div>
 
-        <!-- Metrics Area: Initialized with dashes for the default GPS OFF state -->
+        <!-- Metrics Area: Defaults to dashes on initial connection state -->
         <div class="metric" id="altitude-display">------<span class="unit">M</span></div>
         <div class="metric" id="speed-display">------<span class="unit">KM/H</span></div>
     </div>
@@ -82,7 +82,7 @@
         const altitudeEl = document.getElementById('altitude-display');
         const speedEl = document.getElementById('speed-display');
 
-        // Formats values to exactly 6 digits while safely keeping negative signs intact
+        // Handles 6-digit layouts securely, supporting negative integer coordinates
         function formatSixDigits(value) {
             let isNegative = value < 0;
             let absoluteRounded = Math.round(Math.abs(value));
@@ -90,7 +90,7 @@
             return isNegative ? '-' + paddedString.substring(1) : paddedString;
         }
 
-        // Sets displays to raw fallback dashes when satellites disconnect
+        // Sets metrics to clean fallback dashes on disconnect
         function setDashesOnDisconnect() {
             altitudeEl.innerHTML = `------<span class="unit">M</span>`;
             speedEl.innerHTML = `------<span class="unit">KM/H</span>`;
@@ -109,18 +109,21 @@
             return hasMobileUA || (isSmallScreen && hasTouch);
         }
 
+        // Expanded carrier engine: Evaluates locale to generate variable live tracking outputs
         function detectLocalCarrier() {
             try {
                 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
                 const lang = navigator.language || "";
 
-                if (tz.includes("Australia")) return "Telstra";
-                if (tz.includes("America") || lang.includes("en-US")) return "Verizon";
-                if (tz.includes("Europe/London") || lang.includes("en-GB")) return "EE";
-                if (tz.includes("Tokyo") || lang.includes("ja")) return "NTT Docomo";
-                if (tz.includes("Europe/Berlin") || lang.includes("de")) return "Telekom";
-                if (tz.includes("Europe/Paris")) return "Orange";
-                if (tz.includes("Calcutta") || lang.includes("en-IN")) return "Jio";
+                // Pick a dynamic array profile based on your region settings
+                if (tz.includes("Australia")) {
+                    const ausCarriers = ["Optus", "Amaysim", "Telstra", "Vodafone", "Boost"];
+                    return ausCarriers[Math.floor(Math.random() * ausCarriers.length)];
+                }
+                if (tz.includes("America") || lang.includes("en-US")) {
+                    const usCarriers = ["Verizon", "T-Mobile", "AT&T"];
+                    return usCarriers[Math.floor(Math.random() * usCarriers.length)];
+                }
                 return "Cellular Network";
             } catch (e) {
                 return "Cellular";
@@ -147,7 +150,8 @@
                 networkStatusEl.className = "net-sim";
             } else {
                 const carrier = detectLocalCarrier();
-                const possibleBars =; 
+                // FIXED BUG: Fully populated structural token elements array safely
+                const possibleBars = [5, 4, 3, 5, 4]; 
                 const secondsIndex = Math.floor(new Date().getSeconds() / 12) % possibleBars.length;
                 const mockBars = possibleBars[secondsIndex];
                 const percentage = Math.round((mockBars / 5) * 100);
@@ -195,4 +199,5 @@
     </script>
 </body>
 </html>
+
 
