@@ -10,26 +10,10 @@
             color: #000000;
             font-family: Arial, sans-serif;
             font-weight: bold;
-            text-align: center; /* Exactly centered like the image */
+            text-align: center;
             padding: 30px;
         }
 
-        /* Simulator controls wrapper - Included for testing different system states */
-        .simulator-controls {
-            margin: 0 auto 30px auto;
-            padding: 15px;
-            border: 2px dashed #000;
-            display: inline-block;
-            text-align: left;
-            font-size: 14px;
-        }
-        .simulator-controls label {
-            cursor: pointer;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        /* Header Style */
         h1 {
             font-size: 36px;
             margin-top: 0;
@@ -38,7 +22,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Connection / GPS Status Layout */
         .status-container {
             margin-bottom: 35px;
             font-size: 20px;
@@ -48,22 +31,21 @@
         }
 
         .gps-on, .battery-saving {
-            color: #00FF00; /* Lime */
+            color: #00FF00;
         }
 
         .gps-off, .no-connect {
-            color: #FF0000; /* Bright Red */
+            color: #FF0000;
         }
 
         .no-service {
-            color: #00BFFF; /* Bright Blue matching the image */
+            color: #00BFFF;
         }
 
         .sim-detected {
             color: #000000;
         }
 
-        /* Form Area */
         .form-container {
             margin: 0 auto 25px auto;
             max-width: 320px;
@@ -87,14 +69,13 @@
             font-weight: bold;
             font-size: 18px;
             border: none;
-            border-bottom: 3px solid #000000; /* Thick underlines for the text boxes */
+            border-bottom: 3px solid #000000;
             outline: none;
             padding: 0 0 2px 5px;
             width: 100%;
             background: transparent;
         }
 
-        /* Button Styling */
         button {
             font-family: Arial, sans-serif;
             font-weight: bold;
@@ -113,7 +94,6 @@
             opacity: 0.3;
         }
 
-        /* Output Text Layout matching your image font scale */
         .output-line {
             font-size: 64px; 
             margin-bottom: 10px;
@@ -121,7 +101,7 @@
         }
 
         .unit {
-            font-size: 32px; /* Smaller font size than the numbers beside it */
+            font-size: 32px;
             font-weight: bold;
             text-transform: uppercase;
             margin-left: 5px;
@@ -132,27 +112,17 @@
 <body>
 
     <a href="index.html">
-  <img src="Logo.png" alt="Brendan's Website">
-</a>
-    <!-- ⚙️ SIMULATOR CONTROLS (You can toggle these to see the layouts update dynamically) -->
-    <div class="simulator-controls">
-        <div><strong>⚙️ Dashboard Simulator Controls:</strong></div>
-        <label><input type="checkbox" id="toggleGps" checked onchange="updateDashboard()"> GPS Hardware On</label>
-        <label><input type="radio" name="connStatus" value="noservice" checked onchange="updateDashboard()"> No Service Status Mode</label>
-        <label><input type="radio" name="connStatus" value="noconnect" onchange="updateDashboard()"> No Connect Status Mode</label>
-        <label><input type="radio" name="connStatus" value="connected" onchange="updateDashboard()"> SIM Card Detected Mode</label>
-    </div>
+        <img src="Logo.png" alt="Brendan's Website">
+    </a>
 
-    <!-- MAIN DASHBOARD -->
     <h1>Directions</h1>
 
     <div class="status-container">
-        <div id="gpsStatus">GPS ON</div>
+        <div id="gpsStatus">GPS OFF</div>
         <div class="battery-saving">BATTERY SAVING MODE ON</div>
-        <div id="connectionStatus">NO SERVICE</div>
+        <div id="connectionStatus">NO CONNECT</div>
     </div>
 
-    <!-- FIELD BOXES PLACED ABOVE MINS AND KM -->
     <div class="form-container">
         <div class="field-group"><label for="street">Street:</label><input type="text" id="street" oninput="validateForm()"></div>
         <div class="field-group"><label for="suburb">Suburb:</label><input type="text" id="suburb" oninput="validateForm()"></div>
@@ -161,29 +131,74 @@
         <div class="field-group"><label for="continent">Continent:</label><input type="text" id="continent" oninput="validateForm()"></div>
     </div>
 
-    <!-- ACTION BUTTON -->
     <button id="directionsBtn" onclick="calculateDirections()" disabled>State directions</button>
 
-    <!-- CALCULATIONS GENERATED BELOW THE BOXES WITHOUT THE ZEROS -->
     <div id="timeOutput" class="output-line">--<span class="unit" style="font-size: 50%;">MINS</span></div>
     <div id="distanceOutput" class="output-line">--<span class="unit" style="font-size: 50%;">KM</span></div>
 
     <script>
-        // Requested Color Transitions: Lime - Dark Green - Yellow - Orange - Red - Bright red
         const colorScale = [
-            '#00FF00', // Lime (closest values)
-            '#006400', // Dark Green
-            '#FFFF00', // Yellow
-            '#FFA500', // Orange
-            '#FF4500', // Red
-            '#FF0000'  // Bright Red (longest values)
+            '#00FF00', 
+            '#006400', 
+            '#FFFF00', 
+            '#FFA500', 
+            '#FF4500', 
+            '#FF0000'  
         ];
 
-        function updateDashboard() {
-            // 1. Handle GPS Engine States
-            const gpsOn = document.getElementById('toggleGps').checked;
+        let isGpsOn = false;
+        let connectionType = "noconnect"; 
+        let simBrand = "Network";
+        let signalBars = 0;
+        let signalPercentage = 0;
+
+        function checkSystemStatus() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        isGpsOn = true;
+                        updateStatusUI();
+                    },
+                    function(error) {
+                        isGpsOn = false;
+                        updateStatusUI();
+                    },
+                    { timeout: 5000 }
+                );
+            } else {
+                isGpsOn = false;
+                updateStatusUI();
+            }
+
+            if (navigator.onLine) {
+                const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                if (conn) {
+                    if (conn.type === 'cellular' || ['2g', '3g', '4g'].includes(conn.effectiveType)) {
+                        connectionType = "connected";
+                        simBrand = "Mobile Carrier";
+                        if (conn.saveData) {
+                            signalBars = 2;
+                            signalPercentage = 45;
+                        } else {
+                            signalBars = conn.effectiveType === '4g' ? 5 : 3;
+                            signalPercentage = conn.effectiveType === '4g' ? 92 : 68;
+                        }
+                    } else {
+                        connectionType = "noservice";
+                    }
+                } else {
+                    connectionType = "noservice";
+                }
+            } else {
+                connectionType = "noconnect";
+            }
+
+            updateStatusUI();
+        }
+
+        function updateStatusUI() {
             const gpsStatusDiv = document.getElementById('gpsStatus');
-            if (gpsOn) {
+            if (isGpsOn) {
                 gpsStatusDiv.textContent = "GPS ON";
                 gpsStatusDiv.className = "gps-on";
             } else {
@@ -191,18 +206,15 @@
                 gpsStatusDiv.className = "gps-off";
             }
 
-            // 2. Handle Connection Modes
-            const connValue = document.querySelector('input[name="connStatus"]:checked').value;
             const connStatusDiv = document.getElementById('connectionStatus');
-            
-            if (connValue === 'noconnect') {
+            if (connectionType === 'noconnect') {
                 connStatusDiv.textContent = "NO CONNECT";
                 connStatusDiv.className = "no-connect";
-            } else if (connValue === 'noservice') {
+            } else if (connectionType === 'noservice') {
                 connStatusDiv.textContent = "NO SERVICE";
                 connStatusDiv.className = "no-service";
-            } else if (connValue === 'connected') {
-                connStatusDiv.textContent = "SIM Brand (4/5) (85%)";
+            } else if (connectionType === 'connected') {
+                connStatusDiv.textContent = `${simBrand} (${signalBars}/5) (${signalPercentage}%)`;
                 connStatusDiv.className = "sim-detected";
             }
 
@@ -212,24 +224,18 @@
         function validateForm() {
             const fields = ['street', 'suburb', 'state', 'country', 'continent'];
             const allFilled = fields.every(id => document.getElementById(id).value.trim() !== "");
-            const gpsOn = document.getElementById('toggleGps').checked;
-            
-            // Button activates when all field boxes are completely filled and GPS is on
-            document.getElementById('directionsBtn').disabled = !(allFilled && gpsOn);
+            document.getElementById('directionsBtn').disabled = !(allFilled && isGpsOn);
         }
 
         function calculateDirections() {
             const seed = document.getElementById('street').value.length + document.getElementById('suburb').value.length;
             
-            // Generate mock ranges
             const mockDistanceMeters = (seed * 850) % 150000; 
             const mockTimeSeconds = (seed * 480) % 9000;
 
-            // Map values to colors (smaller = lime, larger = bright red)
             const distIndex = Math.min(Math.floor((mockDistanceMeters / 150000) * colorScale.length), colorScale.length - 1);
             const timeIndex = Math.min(Math.floor((mockTimeSeconds / 9000) * colorScale.length), colorScale.length - 1);
 
-            // Time metric output string configuration
             const timeDiv = document.getElementById('timeOutput');
             timeDiv.style.color = colorScale[timeIndex];
             if (mockTimeSeconds < 60) {
@@ -238,7 +244,6 @@
                 timeDiv.innerHTML = `${Math.round(mockTimeSeconds / 60)}<span class="unit" style="font-size: 50%;">MINS</span>`;
             }
 
-            // Distance metric output string configuration
             const distDiv = document.getElementById('distanceOutput');
             distDiv.style.color = colorScale[distIndex];
             if (mockDistanceMeters < 1000) {
@@ -248,8 +253,12 @@
             }
         }
 
-        // Initialize status engines
-        updateDashboard();
+        checkSystemStatus();
+        window.addEventListener('online', checkSystemStatus);
+        window.addEventListener('offline', checkSystemStatus);
+        if (navigator.connection) {
+            navigator.connection.addEventListener('change', checkSystemStatus);
+        }
     </script>
 </body>
 </html>
