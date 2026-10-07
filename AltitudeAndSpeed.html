@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flexible Altitude and Speed Tracker</title>
+    <title>Multi-Device Altitude and Speed Tracker</title>
     <style>
         body {
             font-family: Arial, Helvetica, sans-serif;
@@ -15,11 +15,13 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
         }
         .container {
             text-align: center;
-            padding: 25px;
-            min-width: 340px;
+            width: 100%;
+            max-width: 650px;
         }
         h1 {
             font-size: 1.4rem;
@@ -40,27 +42,69 @@
         .net-no-connect { color: #ff0000; }
         .net-sim { color: #00d2ff; }
         
+        .dashboard {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 15px 0;
+        }
+        .metric-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
         .metric {
             font-size: 2.5rem;
             font-weight: bold;
             color: #000000;
-            margin: 15px 0;
             letter-spacing: 1px;
+            line-height: 1.2;
+        }
+        .metric-secondary {
+            font-size: 1.8rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            line-height: 1.2;
+            margin: 5px 0;
+        }
+        .grey-10 {
+            color: #808080;
+        }
+        .light-grey-20 {
+            color: #d3d3d3;
+        }
+        .unit {
+            font-size: 0.65em; 
+            font-weight: bold;
+            margin-left: 4px;
         }
 
-        /* Styles units to be capitalized and slightly smaller than the numbers */
-        .unit {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-left: 2px;
+        /* Responsive Tablet Screen Optimization */
+        @media screen and (min-width: 600px) and (max-width: 1024px) {
+            h1 {
+                font-size: 2rem;
+                margin-bottom: 30px;
+            }
+            .status-block {
+                font-size: 1.25rem;
+                margin-bottom: 40px;
+            }
+            .dashboard {
+                gap: 80px;
+            }
+            .metric {
+                font-size: 4rem;
+                letter-spacing: 2px;
+            }
+            .metric-secondary {
+                font-size: 2.8rem;
+                letter-spacing: 2px;
+            }
         }
     </style>
 </head>
 <body>
 
-    <a href="index.html">
-        <img src="Logo.png" alt="Brendan's Website">
-    </a>
     <div class="container">
         <h1>Your Current Altitude and Speed</h1>
         
@@ -71,32 +115,66 @@
             <div id="network-status" class="net-no-connect">NO CONNECT</div>
         </div>
 
-        <!-- Metrics Area: Defaults to dashes on initial connection state -->
-        <div class="metric" id="altitude-display">------<span class="unit">M</span></div>
-        <div class="metric" id="speed-display">------<span class="unit">KM/H</span></div>
+        <!-- Dashboard Layout -->
+        <div class="dashboard">
+            <!-- Speed Column (Left) -->
+            <div class="metric-column" id="speed-column">
+                <div class="metric-secondary light-grey-20">000020<span class="unit">KM/H</span></div>
+                <div class="metric-secondary grey-10">000010<span class="unit">KM/H</span></div>
+                <div class="metric" id="speed-center">000000<span class="unit">KM/H</span></div>
+                <div class="metric-secondary grey-10">-000010<span class="unit">KM/H</span></div>
+                <div class="metric-secondary light-grey-20">-000020<span class="unit">KM/H</span></div>
+            </div>
+
+            <!-- Altitude Column (Right) -->
+            <div class="metric-column" id="altitude-column">
+                <div class="metric-secondary light-grey-20">000020<span class="unit">M</span></div>
+                <div class="metric-secondary grey-10">000010<span class="unit">M</span></div>
+                <div class="metric" id="altitude-center">000000<span class="unit">M</span></div>
+                <div class="metric-secondary grey-10">-000010<span class="unit">M</span></div>
+                <div class="metric-secondary light-grey-20">-000020<span class="unit">M</span></div>
+            </div>
+        </div>
     </div>
 
     <script>
         const gpsStatusEl = document.getElementById('gps-status');
         const networkStatusEl = document.getElementById('network-status');
-        const altitudeEl = document.getElementById('altitude-display');
-        const speedEl = document.getElementById('speed-display');
+        const speedColumn = document.getElementById('speed-column');
+        const altitudeColumn = document.getElementById('altitude-column');
 
-        // Handles 6-digit layouts securely, supporting negative integer coordinates
         function formatSixDigits(value) {
             let isNegative = value < 0;
-            let absoluteRounded = Math.round(Math.abs(value));
-            let paddedString = String(absoluteRounded).padStart(6, '0');
-            return isNegative ? '-' + paddedString.substring(1) : paddedString;
+            let absValue = Math.abs(Math.round(value));
+            let padded = String(absValue).padStart(6, '0');
+            return (isNegative ? '-' : '') + padded;
         }
 
-        // Sets metrics to clean fallback dashes on disconnect
-        function setDashesOnDisconnect() {
-            altitudeEl.innerHTML = `------<span class="unit">M</span>`;
-            speedEl.innerHTML = `------<span class="unit">KM/H</span>`;
+        function renderColumn(element, currentValue, unit) {
+            let current = Math.round(currentValue);
+            
+            let baseBelow = Math.floor(current / 10) * 10;
+            let baseAbove = Math.ceil(current / 10) * 10;
+
+            if (baseBelow === baseAbove) {
+                baseAbove += 10;
+                baseBelow -= 10;
+            }
+
+            let plus10 = baseAbove;
+            let plus20 = baseAbove + 10;
+            let minus10 = baseBelow;
+            let minus20 = baseBelow - 10;
+
+            element.innerHTML = `
+                <div class="metric-secondary light-grey-20">${formatSixDigits(plus20)}<span class="unit">${unit}</span></div>
+                <div class="metric-secondary grey-10">${formatSixDigits(plus10)}<span class="unit">${unit}</span></div>
+                <div class="metric">${formatSixDigits(current)}<span class="unit">${unit}</span></div>
+                <div class="metric-secondary grey-10">${formatSixDigits(minus10)}<span class="unit">${unit}</span></div>
+                <div class="metric-secondary light-grey-20">${formatSixDigits(minus20)}<span class="unit">${unit}</span></div>
+            `;
         }
 
-        // Checks user-agent characteristics and screen layouts to determine if it is a mobile phone
         function isPhoneDevice() {
             const hasMobileUA = /Mobi|Android|iPhone|iPod/i.test(navigator.userAgent);
             const isSmallScreen = Math.min(window.screen.width, window.screen.height) < 768;
@@ -105,25 +183,16 @@
             if (navigator.userAgentData && typeof navigator.userAgentData.mobile === 'boolean') {
                 return navigator.userAgentData.mobile && isSmallScreen;
             }
-            
             return hasMobileUA || (isSmallScreen && hasTouch);
         }
 
-        // Expanded carrier engine: Evaluates locale to generate variable live tracking outputs
         function detectLocalCarrier() {
             try {
                 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-                const lang = navigator.language || "";
-
-                // Pick a dynamic array profile based on your region settings
-                if (tz.includes("Australia")) {
-                    const ausCarriers = ["Optus", "Amaysim", "Telstra", "Vodafone", "Boost"];
-                    return ausCarriers[Math.floor(Math.random() * ausCarriers.length)];
-                }
-                if (tz.includes("America") || lang.includes("en-US")) {
-                    const usCarriers = ["Verizon", "T-Mobile", "AT&T"];
-                    return usCarriers[Math.floor(Math.random() * usCarriers.length)];
-                }
+                if (tz.includes("Australia")) return "Telstra";
+                if (tz.includes("America")) return "Verizon";
+                if (tz.includes("Europe/London")) return "EE";
+                if (tz.includes("Tokyo")) return "NTT Docomo";
                 return "Cellular Network";
             } catch (e) {
                 return "Cellular";
@@ -150,13 +219,12 @@
                 networkStatusEl.className = "net-sim";
             } else {
                 const carrier = detectLocalCarrier();
-                // FIXED BUG: Fully populated structural token elements array safely
-                const possibleBars = [5, 4, 3, 5, 4]; 
+                const possibleBars =; 
                 const secondsIndex = Math.floor(new Date().getSeconds() / 12) % possibleBars.length;
                 const mockBars = possibleBars[secondsIndex];
                 const percentage = Math.round((mockBars / 5) * 100);
                 
-                networkStatusEl.textContent = `${carrier} (${mockBars}/5)(${percentage}%)`;
+                networkStatusEl.textContent = carrier + " (" + mockBars + "/5) (" + percentage + "%)";
                 networkStatusEl.className = "net-sim";
             }
         }
@@ -174,16 +242,15 @@
                     gpsStatusEl.className = "gps-on";
 
                     const altitude = position.coords.altitude !== null ? position.coords.altitude : 0;
-                    altitudeEl.innerHTML = `${formatSixDigits(altitude)}<span class="unit">M</span>`;
+                    renderColumn(altitudeColumn, altitude, 'M');
                     
-                    const speedMPS = position.coords.speed !== null && position.coords.speed >= 0 ? position.coords.speed : 0;
+                    const speedMPS = position.coords.speed !== null ? position.coords.speed : 0;
                     const speedKMH = speedMPS * 3.6;
-                    speedEl.innerHTML = `${formatSixDigits(speedKMH)}<span class="unit">KM/H</span>`;
+                    renderColumn(speedColumn, speedKMH, 'KM/H');
                 },
                 (error) => {
                     gpsStatusEl.textContent = "GPS OFF";
                     gpsStatusEl.className = "gps-off";
-                    setDashesOnDisconnect();
                 },
                 {
                     enableHighAccuracy: true,
@@ -194,10 +261,8 @@
         } else {
             gpsStatusEl.textContent = "GPS OFF";
             gpsStatusEl.className = "gps-off";
-            setDashesOnDisconnect();
         }
     </script>
 </body>
 </html>
-
 
