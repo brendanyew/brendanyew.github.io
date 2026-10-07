@@ -111,7 +111,7 @@
         <div class="status-block">
             <div id="gps-status" class="gps-off">GPS OFF</div>
             <div class="battery-status">BATTERY SAVING MODE ON</div>
-            <div id="network-status" class="net-no-connect">NO CONNECT</div>
+            <div id="network-status" class="net-sim">CONNECTED</div>
             <div id="idle-status" class="idle-status" style="display: none;">IDLE MODE ON</div>
         </div>
 
@@ -220,21 +220,14 @@
                 return;
             }
 
-            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            const carrier = detectLocalCarrier();
+            const barsArray = [3, 4, 5];
+            const secondsIndex = Math.floor(new Date().getSeconds() / 12) % barsArray.length;
+            const mockBars = barsArray[secondsIndex];
+            const percentage = Math.round((mockBars / 5) * 100);
             
-            if (connection && connection.type && connection.type !== 'cellular') {
-                networkStatusEl.textContent = "NO SERVICE";
-                networkStatusEl.className = "net-sim";
-            } else {
-                const carrier = detectLocalCarrier();
-                const possibleBars = Array.of(3, 4, 5); 
-                const secondsIndex = Math.floor(new Date().getSeconds() / 12) % possibleBars.length;
-                const mockBars = possibleBars[secondsIndex];
-                const percentage = Math.round((mockBars / 5) * 100);
-                
-                networkStatusEl.textContent = carrier + " (" + mockBars + "/5) (" + percentage + "%)";
-                networkStatusEl.className = "net-sim";
-            }
+            networkStatusEl.textContent = carrier + " (" + mockBars + "/5) (" + percentage + "%)";
+            networkStatusEl.className = "net-sim";
         }
 
         window.addEventListener('online', updateNetworkStatus);
@@ -252,12 +245,14 @@
                     gpsStatusEl.textContent = "GPS ON";
                     gpsStatusEl.className = "gps-on";
 
-const altitude = position.coords.altitude !== null ? position.coords.altitude : 0;
-renderColumn(altitudeColumn, altitude, 'M');
-const speedMPS = position.coords.speed !== null ? position.coords.speed : 0;
-const speedKMH = speedMPS * 3.6;
-renderColumn(speedColumn, speedKMH, 'KM/H');
-if (Math.round(speedKMH) === 0) {
+                    const altitude = position.coords.altitude !== null ? position.coords.altitude : 0;
+                    renderColumn(altitudeColumn, altitude, 'M');
+                    
+                    const speedMPS = position.coords.speed !== null ? position.coords.speed : 0;
+                    const speedKMH = speedMPS * 3.6;
+                    renderColumn(speedColumn, speedKMH, 'KM/H');
+
+                    if (Math.round(speedKMH) === 0) {
 idleStatusEl.style.display = 'block';
 } else {
 idleStatusEl.style.display = 'none';
@@ -303,3 +298,4 @@ renderColumn(speedColumn, 0, 'KM/H');
     </script>
 </body>
 </html>
+
