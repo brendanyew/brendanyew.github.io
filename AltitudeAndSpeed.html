@@ -79,7 +79,6 @@
             margin-left: 4px;
         }
 
-        /* Responsive Tablet Screen Optimization */
         @media screen and (min-width: 600px) and (max-width: 1024px) {
             h1 {
                 font-size: 2rem;
@@ -105,19 +104,19 @@
 </head>
 <body>
 
+    <a href="index.html">
+  <img src="Logo.png" alt="Brendan's Website">
+</a>
     <div class="container">
         <h1>Your Current Altitude and Speed</h1>
         
-        <!-- Status Display Area -->
         <div class="status-block">
             <div id="gps-status" class="gps-off">GPS OFF</div>
             <div class="battery-status">BATTERY SAVING MODE ON</div>
             <div id="network-status" class="net-no-connect">NO CONNECT</div>
         </div>
 
-        <!-- Dashboard Layout -->
         <div class="dashboard">
-            <!-- Speed Column (Left) -->
             <div class="metric-column" id="speed-column">
                 <div class="metric-secondary light-grey-20">000020<span class="unit">KM/H</span></div>
                 <div class="metric-secondary grey-10">000010<span class="unit">KM/H</span></div>
@@ -126,7 +125,6 @@
                 <div class="metric-secondary light-grey-20">-000020<span class="unit">KM/H</span></div>
             </div>
 
-            <!-- Altitude Column (Right) -->
             <div class="metric-column" id="altitude-column">
                 <div class="metric-secondary light-grey-20">000020<span class="unit">M</span></div>
                 <div class="metric-secondary grey-10">000010<span class="unit">M</span></div>
@@ -152,7 +150,6 @@
 
         function renderColumn(element, currentValue, unit) {
             let current = Math.round(currentValue);
-            
             let baseBelow = Math.floor(current / 10) * 10;
             let baseAbove = Math.ceil(current / 10) * 10;
 
@@ -265,4 +262,3 @@
     </script>
 </body>
 </html>
-
