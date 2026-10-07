@@ -41,6 +41,7 @@
         .battery-status { color: #00ff00; }
         .net-no-connect { color: #ff0000; }
         .net-sim { color: #00d2ff; }
+        .idle-status { color: #ffff00; }
         
         .dashboard {
             display: flex;
@@ -114,6 +115,7 @@
             <div id="gps-status" class="gps-off">GPS OFF</div>
             <div class="battery-status">BATTERY SAVING MODE ON</div>
             <div id="network-status" class="net-no-connect">NO CONNECT</div>
+            <div id="idle-status" class="idle-status" style="display: none;">IDLE MODE ON</div>
         </div>
 
         <div class="dashboard">
@@ -138,6 +140,7 @@
     <script>
         const gpsStatusEl = document.getElementById('gps-status');
         const networkStatusEl = document.getElementById('network-status');
+        const idleStatusEl = document.getElementById('idle-status');
         const speedColumn = document.getElementById('speed-column');
         const altitudeColumn = document.getElementById('altitude-column');
 
@@ -214,7 +217,7 @@
                 networkStatusEl.className = "net-sim";
             } else {
                 const carrier = detectLocalCarrier();
-                const possibleBars = [3, 4, 5]; 
+                const possibleBars = Array.of(3, 4, 5); 
                 const secondsIndex = Math.floor(new Date().getSeconds() / 12) % possibleBars.length;
                 const mockBars = possibleBars[secondsIndex];
                 const percentage = Math.round((mockBars / 5) * 100);
@@ -230,6 +233,8 @@
         setInterval(updateNetworkStatus, 4000);
         updateNetworkStatus();
 
+        idleStatusEl.style.display = 'block';
+
         if ("geolocation" in navigator) {
             navigator.geolocation.watchPosition(
                 (position) => {
@@ -242,10 +247,21 @@
                     const speedMPS = position.coords.speed !== null ? position.coords.speed : 0;
                     const speedKMH = speedMPS * 3.6;
                     renderColumn(speedColumn, speedKMH, 'KM/H');
+
+                    if (Math.round(speedKMH) === 0) {
+                        idleStatusEl.style.display = 'block';
+                    } else {
+                        idleStatusEl.style.display = 'none';
+                    }
                 },
                 (error) => {
                     gpsStatusEl.textContent = "GPS OFF";
                     gpsStatusEl.className = "gps-off";
+                },
+                (error) => {
+                    gpsStatusEl.textContent = "GPS OFF";
+                    gpsStatusEl.className = "gps-off";
+                    idleStatusEl.style.display = "block";
                 },
                 {
                     enableHighAccuracy: true,
@@ -256,8 +272,10 @@
         } else {
             gpsStatusEl.textContent = "GPS OFF";
             gpsStatusEl.className = "gps-off";
+            idleStatusEl.style.display = "block";
         }
     </script>
 </body>
 </html>
+
 
