@@ -105,9 +105,6 @@
 </head>
 <body>
 
-    <a href="index.html">
-  <img src="Logo.png" alt="Brendan's Website">
-</a>
     <div class="container">
         <h1>Your Current Altitude and Speed</h1>
         
@@ -139,6 +136,170 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script>
+        const gpsStatusEl = document.getElementById('gps-status');
+        const networkStatusEl = document.getElementById('network-status');
+        const idleStatusEl = document.getElementById('idle-status');
+        const speedColumn = document.getElementById('speed-column');
+        const altitudeColumn = document.getElementById('altitude-column');
+
+        let liveGpsActive = false;
+
+        function formatSixDigits(value) {
+            let isNegative = value < 0;
+            let absValue = Math.abs(Math.round(value));
+            let padded = String(absValue).padStart(6, '0');
+            return (isNegative ? '-' : '') + padded;
+        }
+
+        function renderColumn(element, currentValue, unit) {
+            if (!liveGpsActive) {
+                element.innerHTML = '<div class="metric-secondary light-grey-20">+20<span class="unit">' + unit + '</span></div>' +
+                    '<div class="metric-secondary grey-10">+10<span class="unit">' + unit + '</span></div>' +
+                    '<div class="metric">------<span class="unit">' + unit + '</span></div>' +
+                    '<div class="metric-secondary grey-10">-10<span class="unit">' + unit + '</span></div>' +
+                    '<div class="metric-secondary light-grey-20">-20<span class="unit">' + unit + '</span></div>';
+                return;
+            }
+
+            let current = Math.round(currentValue);
+            let baseBelow = Math.floor(current / 10) * 10;
+            let baseAbove = Math.ceil(current / 10) * 10;
+
+            if (baseBelow === baseAbove) {
+                baseAbove += 10;
+                baseBelow -= 10;
+            }
+
+            let plus10 = baseAbove;
+            let plus20 = baseAbove + 10;
+            let minus10 = baseBelow;
+            let minus20 = baseBelow - 10;
+
+            element.innerHTML = '<div class="metric-secondary light-grey-20">' + formatSixDigits(plus20) + '<span class="unit">' + unit + '</span></div>' +
+                '<div class="metric-secondary grey-10">' + formatSixDigits(plus10) + '<span class="unit">' + unit + '</span></div>' +
+                '<div class="metric">' + formatSixDigits(current) + '<span class="unit">' + unit + '</span></div>' +
+                '<div class="metric-secondary grey-10">' + formatSixDigits(minus10) + '<span class="unit">' + unit + '</span></div>' +
+                '<div class="metric-secondary light-grey-20">' + formatSixDigits(minus20) + '<span class="unit">' + unit + '</span></div>';
+        }
+
+        function isPhoneDevice() {
+            const hasMobileUA = /Mobi|Android|iPhone|iPod/i.test(navigator.userAgent);
+            const isSmallScreen = Math.min(window.screen.width, window.screen.height) < 768;
+            const hasTouch = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+            
+            if (navigator.userAgentData && typeof navigator.userAgentData.mobile === 'boolean') {
+                return navigator.userAgentData.mobile && isSmallScreen;
+            }
+            return hasMobileUA || (isSmallScreen && hasTouch);
+        }
+
+        function detectLocalCarrier() {
+            try {
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+                if (tz.includes("Australia")) return "Telstra";
+                if (tz.includes("America")) return "Verizon";
+                if (tz.includes("Europe/London")) return "EE";
+                if (tz.includes("Tokyo")) return "NTT Docomo";
+                return "Cellular Network";
+            } catch (e) {
+                return "Cellular";
+            }
+        }
+
+        function updateNetworkStatus() {
+            if (!navigator.onLine) {
+                networkStatusEl.textContent = "NO CONNECT";
+                networkStatusEl.className = "net-no-connect";
+                return;
+            }
+
+            if (!isPhoneDevice()) {
+                networkStatusEl.textContent = "NO SERVICE";
+                networkStatusEl.className = "net-sim";
+                return;
+            }
+
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            
+            if (connection && connection.type && connection.type !== 'cellular') {
+                networkStatusEl.textContent = "NO SERVICE";
+                networkStatusEl.className = "net-sim";
+            } else {
+                const carrier = detectLocalCarrier();
+                const possibleBars = Array.of(3, 4, 5); 
+                const secondsIndex = Math.floor(new Date().getSeconds() / 12) % possibleBars.length;
+                const mockBars = possibleBars[secondsIndex];
+                const percentage = Math.round((mockBars / 5) * 100);
+                
+                networkStatusEl.textContent = carrier + " (" + mockBars + "/5) (" + percentage + "%)";
+                networkStatusEl.className = "net-sim";
+            }
+        }
+
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+        
+        setInterval(updateNetworkStatus, 4000);
+        updateNetworkStatus();
+
+        idleStatusEl.style.display = 'block';
+
+        if ("geolocation" in navigator) {
+            navigator.geolocation.watchPosition(
+                (position) => {
+                    liveGpsActive = true;
+                    gpsStatusEl.textContent = "GPS ON";
+                    gpsStatusEl.className = "gps-on";
+
+const altitude = position.coords.altitude !== null ? position.coords.altitude : 0;
+renderColumn(altitudeColumn, altitude, 'M');
+const speedMPS = position.coords.speed !== null ? position.coords.speed : 0;
+const speedKMH = speedMPS * 3.6;
+renderColumn(speedColumn, speedKMH, 'KM/H');
+if (Math.round(speedKMH) === 0) {
+idleStatusEl.style.display = 'block';
+} else {
+idleStatusEl.style.display = 'none';
+}
+},
+(error) => {
+liveGpsActive = false;
+gpsStatusEl.textContent = "GPS OFF";
+gpsStatusEl.className = "gps-off";
+idleStatusEl.style.display = 'block';
+renderColumn(altitudeColumn, 0, 'M');
+renderColumn(speedColumn, 0, 'KM/H');
+},
+{
+enableHighAccuracy: true,
+maximumAge: 0,
+timeout: 10000
+}
+);
+} else {
+liveGpsActive = false;
+gpsStatusEl.textContent = "GPS OFF";
+gpsStatusEl.className = "gps-off";
+idleStatusEl.style.display = 'block';
+renderColumn(altitudeColumn, 0, 'M');
+renderColumn(speedColumn, 0, 'KM/H');
+}
+                        },
+                {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 10000
+                }
+            );
+        } else {
+            liveGpsActive = false;
+            gpsStatusEl.textContent = "GPS OFF";
+            gpsStatusEl.className = "gps-off";
+            idleStatusEl.style.display = 'block';
+            renderColumn(altitudeColumn, 0, 'M');
+            renderColumn(speedColumn, 0, 'KM/H');
+        }
+    </script>
 </body>
 </html>
