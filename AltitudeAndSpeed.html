@@ -163,13 +163,11 @@
             let minus10 = baseBelow;
             let minus20 = baseBelow - 10;
 
-            element.innerHTML = `
-                <div class="metric-secondary light-grey-20">${formatSixDigits(plus20)}<span class="unit">${unit}</span></div>
-                <div class="metric-secondary grey-10">${formatSixDigits(plus10)}<span class="unit">${unit}</span></div>
-                <div class="metric">${formatSixDigits(current)}<span class="unit">${unit}</span></div>
-                <div class="metric-secondary grey-10">${formatSixDigits(minus10)}<span class="unit">${unit}</span></div>
-                <div class="metric-secondary light-grey-20">${formatSixDigits(minus20)}<span class="unit">${unit}</span></div>
-            `;
+            element.innerHTML = '<div class="metric-secondary light-grey-20">' + formatSixDigits(plus20) + '<span class="unit">' + unit + '</span></div>' +
+                '<div class="metric-secondary grey-10">' + formatSixDigits(plus10) + '<span class="unit">' + unit + '</span></div>' +
+                '<div class="metric">' + formatSixDigits(current) + '<span class="unit">' + unit + '</span></div>' +
+                '<div class="metric-secondary grey-10">' + formatSixDigits(minus10) + '<span class="unit">' + unit + '</span></div>' +
+                '<div class="metric-secondary light-grey-20">' + formatSixDigits(minus20) + '<span class="unit">' + unit + '</span></div>';
         }
 
         function isPhoneDevice() {
@@ -216,7 +214,7 @@
                 networkStatusEl.className = "net-sim";
             } else {
                 const carrier = detectLocalCarrier();
-                const possibleBars =; 
+                const possibleBars = [3, 4, 5]; 
                 const secondsIndex = Math.floor(new Date().getSeconds() / 12) % possibleBars.length;
                 const mockBars = possibleBars[secondsIndex];
                 const percentage = Math.round((mockBars / 5) * 100);
@@ -262,3 +260,4 @@
     </script>
 </body>
 </html>
+
