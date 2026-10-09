@@ -119,20 +119,22 @@
         </div>
 
         <div class="dashboard">
+            <!-- Speed Column (Left) -->
             <div class="metric-column" id="speed-column">
-                <div class="metric-secondary light-grey-20">000020<span class="unit">KM/H</span></div>
-                <div class="metric-secondary grey-10">000010<span class="unit">KM/H</span></div>
-                <div class="metric" id="speed-center">000000<span class="unit">KM/H</span></div>
-                <div class="metric-secondary grey-10">-000010<span class="unit">KM/H</span></div>
-                <div class="metric-secondary light-grey-20">-000020<span class="unit">KM/H</span></div>
+                <div class="metric-secondary light-grey-20">+20<span class="unit">KM/H</span></div>
+                <div class="metric-secondary grey-10">+10<span class="unit">KM/H</span></div>
+                <div class="metric">------<span class="unit">KM/H</span></div>
+                <div class="metric-secondary grey-10">-10<span class="unit">KM/H</span></div>
+                <div class="metric-secondary light-grey-20">-20<span class="unit">KM/H</span></div>
             </div>
 
+            <!-- Altitude Column (Right) -->
             <div class="metric-column" id="altitude-column">
-                <div class="metric-secondary light-grey-20">000020<span class="unit">M</span></div>
-                <div class="metric-secondary grey-10">000010<span class="unit">M</span></div>
-                <div class="metric" id="altitude-center">000000<span class="unit">M</span></div>
-                <div class="metric-secondary grey-10">-000010<span class="unit">M</span></div>
-                <div class="metric-secondary light-grey-20">-000020<span class="unit">M</span></div>
+                <div class="metric-secondary light-grey-20">+20<span class="unit">M</span></div>
+                <div class="metric-secondary grey-10">+10<span class="unit">M</span></div>
+                <div class="metric">------<span class="unit">M</span></div>
+                <div class="metric-secondary grey-10">-10<span class="unit">M</span></div>
+                <div class="metric-secondary light-grey-20">-20<span class="unit">M</span></div>
             </div>
         </div>
     </div>
@@ -144,6 +146,8 @@
         const speedColumn = document.getElementById('speed-column');
         const altitudeColumn = document.getElementById('altitude-column');
 
+        let liveGpsActive = false;
+
         function formatSixDigits(value) {
             let isNegative = value < 0;
             let absValue = Math.abs(Math.round(value));
@@ -152,6 +156,15 @@
         }
 
         function renderColumn(element, currentValue, unit) {
+            if (!liveGpsActive) {
+                element.innerHTML = '<div class="metric-secondary light-grey-20">+20<span class="unit">' + unit + '</span></div>' +
+                    '<div class="metric-secondary grey-10">+10<span class="unit">' + unit + '</span></div>' +
+                    '<div class="metric">------<span class="unit">' + unit + '</span></div>' +
+                    '<div class="metric-secondary grey-10">-10<span class="unit">' + unit + '</span></div>' +
+                    '<div class="metric-secondary light-grey-20">-20<span class="unit">' + unit + '</span></div>';
+                return;
+            }
+
             let current = Math.round(currentValue);
             let baseBelow = Math.floor(current / 10) * 10;
             let baseAbove = Math.ceil(current / 10) * 10;
@@ -217,7 +230,7 @@
                 networkStatusEl.className = "net-sim";
             } else {
                 const carrier = detectLocalCarrier();
-                const possibleBars = Array.of(3, 4, 5); 
+                const possibleBars = Array.of(3, 4, 5);
                 const secondsIndex = Math.floor(new Date().getSeconds() / 12) % possibleBars.length;
                 const mockBars = possibleBars[secondsIndex];
                 const percentage = Math.round((mockBars / 5) * 100);
@@ -238,31 +251,44 @@
         if ("geolocation" in navigator) {
             navigator.geolocation.watchPosition(
                 (position) => {
+                    liveGpsActive = true;
                     gpsStatusEl.textContent = "GPS ON";
                     gpsStatusEl.className = "gps-on";
 
-                    const altitude = position.coords.altitude !== null ? position.coords.altitude : 0;
-                    renderColumn(altitudeColumn, altitude, 'M');
-                    
-                    const speedMPS = position.coords.speed !== null ? position.coords.speed : 0;
-                    const speedKMH = speedMPS * 3.6;
-                    renderColumn(speedColumn, speedKMH, 'KM/H');
-
-                    if (Math.round(speedKMH) === 0) {
-                        idleStatusEl.style.display = 'block';
-                    } else {
-                        idleStatusEl.style.display = 'none';
-                    }
-                },
-                (error) => {
-                    gpsStatusEl.textContent = "GPS OFF";
-                    gpsStatusEl.className = "gps-off";
-                },
-                (error) => {
-                    gpsStatusEl.textContent = "GPS OFF";
-                    gpsStatusEl.className = "gps-off";
-                    idleStatusEl.style.display = "block";
-                },
+const altitude = position.coords.altitude !== null ? position.coords.altitude : 0;
+renderColumn(altitudeColumn, altitude, 'M');
+const speedMPS = position.coords.speed !== null ? position.coords.speed : 0;
+const speedKMH = speedMPS * 3.6;
+renderColumn(speedColumn, speedKMH, 'KM/H');
+if (Math.round(speedKMH) === 0) {
+idleStatusEl.style.display = 'block';
+} else {
+idleStatusEl.style.display = 'none';
+}
+},
+(error) => {
+liveGpsActive = false;
+gpsStatusEl.textContent = "GPS OFF";
+gpsStatusEl.className = "gps-off";
+idleStatusEl.style.display = 'block';
+renderColumn(altitudeColumn, 0, 'M');
+renderColumn(speedColumn, 0, 'KM/H');
+},
+{
+enableHighAccuracy: true,
+maximumAge: 0,
+timeout: 10000
+}
+);
+} else {
+liveGpsActive = false;
+gpsStatusEl.textContent = "GPS OFF";
+gpsStatusEl.className = "gps-off";
+idleStatusEl.style.display = 'block';
+renderColumn(altitudeColumn, 0, 'M');
+renderColumn(speedColumn, 0, 'KM/H');
+}
+                        },
                 {
                     enableHighAccuracy: true,
                     maximumAge: 0,
@@ -270,12 +296,14 @@
                 }
             );
         } else {
+            liveGpsActive = false;
             gpsStatusEl.textContent = "GPS OFF";
             gpsStatusEl.className = "gps-off";
-            idleStatusEl.style.display = "block";
+            idleStatusEl.style.display = 'block';
+            renderColumn(altitudeColumn, 0, 'M');
+            renderColumn(speedColumn, 0, 'KM/H');
         }
     </script>
 </body>
 </html>
-
 
