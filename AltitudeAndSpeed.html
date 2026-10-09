@@ -90,15 +90,19 @@
     <div class="container">
         <h1>Your Current Altitude and Speed</h1>
         
-        <div class="status-block">
+              <div class="status-block">
             <div id="gps-status" class="gps-off">GPS OFF</div>
             <div class="battery-status">BATTERY SAVING MODE ON</div>
             <div id="network-status" class="net-no-connect">NO CONNECT</div>
             <div id="idle-status" class="idle-status" style="display: none;">IDLE MODE ON</div>
         </div>
 
+        <!-- Add this missing line right here -->
         <div class="dashboard">
+
+            <!-- Speed Column (Left) -->
             <div class="metric-column" id="speed-column">
+
                 <div class="metric-secondary light-grey-20">+20<span class="unit">KM/H</span></div>
                 <div class="metric-secondary grey-10">+10<span class="unit">KM/H</span></div>
                 <div class="metric">------<span class="unit">KM/H</span></div>
