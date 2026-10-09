@@ -87,9 +87,6 @@
 </head>
 <body>
 
-    <a href="index.html">
-  <img src="Logo.png" alt="Brendan's Website">
-</a>
     <div class="container">
         <h1>Your Current Altitude and Speed</h1>
         
@@ -213,9 +210,9 @@
                 networkStatusEl.className = "net-sim";
             } else {
                 const carrier = detectLocalCarrier();
-                const barsArray =;
-                const secondsIndex = Math.floor(new Date().getSeconds() / 12) % barsArray.length;
-                const mockBars = barsArray[secondsIndex];
+                const possibleBars = Array.of(3, 4, 5);
+                const secondsIndex = Math.floor(new Date().getSeconds() / 12) % possibleBars.length;
+                const mockBars = possibleBars[secondsIndex];
                 const percentage = Math.round((mockBars / 5) * 100);
                 
                 networkStatusEl.textContent = carrier + " (" + mockBars + "/5) (" + percentage + "%)";
@@ -240,7 +237,6 @@
 
                     const altitude = position.coords.altitude !== null ? position.coords.altitude : 0;
                     renderColumn(altitudeColumn, altitude, 'M');
-                    
 const speedMPS = position.coords.speed !== null ? position.coords.speed : 0;
 const speedKMH = speedMPS * 3.6;
 renderColumn(speedColumn, speedKMH, 'KM/H');
