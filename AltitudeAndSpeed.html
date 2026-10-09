@@ -231,7 +231,7 @@
                 networkStatusEl.className = "net-sim";
             } else {
                 const carrier = detectLocalCarrier();
-                const barsArray = Array.of(3, 4, 5);
+                const barsArray =;
                 const secondsIndex = Math.floor(new Date().getSeconds() / 12) % barsArray.length;
                 const mockBars = barsArray[secondsIndex];
                 const percentage = Math.round((mockBars / 5) * 100);
@@ -253,7 +253,7 @@
             navigator.geolocation.watchPosition(
                 (position) => {
                     liveGpsActive = true;
-gpsStatusEl.textContent = "GPS ON";
+                    gpsStatusEl.textContent = "GPS ON";
 gpsStatusEl.className = "gps-on";
 const altitude = position.coords.altitude !== null ? position.coords.altitude : 0;
 renderColumn(altitudeColumn, altitude, 'M');
