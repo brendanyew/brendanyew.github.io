@@ -68,12 +68,8 @@
             line-height: 1.2;
             margin: 5px 0;
         }
-        .grey-10 {
-            color: #808080;
-        }
-        .light-grey-20 {
-            color: #d3d3d3;
-        }
+        .grey-10 { color: #808080; }
+        .light-grey-20 { color: #d3d3d3; }
         .unit {
             font-size: 0.65em; 
             font-weight: bold;
@@ -81,25 +77,11 @@
         }
 
         @media screen and (min-width: 600px) and (max-width: 1024px) {
-            h1 {
-                font-size: 2rem;
-                margin-bottom: 30px;
-            }
-            .status-block {
-                font-size: 1.25rem;
-                margin-bottom: 40px;
-            }
-            .dashboard {
-                gap: 80px;
-            }
-            .metric {
-                font-size: 4rem;
-                letter-spacing: 2px;
-            }
-            .metric-secondary {
-                font-size: 2.8rem;
-                letter-spacing: 2px;
-            }
+            h1 { font-size: 2rem; margin-bottom: 30px; }
+            .status-block { font-size: 1.25rem; margin-bottom: 40px; }
+            .dashboard { gap: 80px; }
+            .metric { font-size: 4rem; letter-spacing: 2px; }
+            .metric-secondary { font-size: 2.8rem; letter-spacing: 2px; }
         }
     </style>
 </head>
@@ -254,9 +236,11 @@
                 (position) => {
                     liveGpsActive = true;
                     gpsStatusEl.textContent = "GPS ON";
-gpsStatusEl.className = "gps-on";
-const altitude = position.coords.altitude !== null ? position.coords.altitude : 0;
-renderColumn(altitudeColumn, altitude, 'M');
+                    gpsStatusEl.className = "gps-on";
+
+                    const altitude = position.coords.altitude !== null ? position.coords.altitude : 0;
+                    renderColumn(altitudeColumn, altitude, 'M');
+                    
 const speedMPS = position.coords.speed !== null ? position.coords.speed : 0;
 const speedKMH = speedMPS * 3.6;
 renderColumn(speedColumn, speedKMH, 'KM/H');
@@ -288,7 +272,7 @@ idleStatusEl.style.display = 'block';
 renderColumn(altitudeColumn, 0, 'M');
 renderColumn(speedColumn, 0, 'KM/H');
 }
-                },
+                        },
                 {
                     enableHighAccuracy: true,
                     maximumAge: 0,
@@ -306,3 +290,4 @@ renderColumn(speedColumn, 0, 'KM/H');
     </script>
 </body>
 </html>
+
