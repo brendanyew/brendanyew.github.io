@@ -98,7 +98,6 @@
         </div>
 
         <div class="dashboard">
-            <!-- Speed Column (Left) -->
             <div class="metric-column" id="speed-column">
                 <div class="metric-secondary light-grey-20">+20<span class="unit">KM/H</span></div>
                 <div class="metric-secondary grey-10">+10<span class="unit">KM/H</span></div>
@@ -107,7 +106,6 @@
                 <div class="metric-secondary light-grey-20">-20<span class="unit">KM/H</span></div>
             </div>
 
-            <!-- Altitude Column (Right) -->
             <div class="metric-column" id="altitude-column">
                 <div class="metric-secondary light-grey-20">+20<span class="unit">M</span></div>
                 <div class="metric-secondary grey-10">+10<span class="unit">M</span></div>
@@ -237,6 +235,7 @@
 
                     const altitude = position.coords.altitude !== null ? position.coords.altitude : 0;
                     renderColumn(altitudeColumn, altitude, 'M');
+                    
 const speedMPS = position.coords.speed !== null ? position.coords.speed : 0;
 const speedKMH = speedMPS * 3.6;
 renderColumn(speedColumn, speedKMH, 'KM/H');
