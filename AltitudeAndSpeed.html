@@ -201,6 +201,7 @@
             try {
                 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
                 if (tz.includes("Australia")) return "Telstra";
+                if (tz.includes("Asia/Saigon") || tz.includes("Ho_Chi_Minh") || navigator.language.includes("vi")) return "Viettel";
                 if (tz.includes("America")) return "Verizon";
                 if (tz.includes("Europe/London")) return "EE";
                 if (tz.includes("Tokyo")) return "NTT Docomo";
@@ -230,9 +231,9 @@
                 networkStatusEl.className = "net-sim";
             } else {
                 const carrier = detectLocalCarrier();
-                const possibleBars = Array.of(3, 4, 5);
-                const secondsIndex = Math.floor(new Date().getSeconds() / 12) % possibleBars.length;
-                const mockBars = possibleBars[secondsIndex];
+                const barsArray = Array.of(3, 4, 5);
+                const secondsIndex = Math.floor(new Date().getSeconds() / 12) % barsArray.length;
+                const mockBars = barsArray[secondsIndex];
                 const percentage = Math.round((mockBars / 5) * 100);
                 
                 networkStatusEl.textContent = carrier + " (" + mockBars + "/5) (" + percentage + "%)";
@@ -252,9 +253,8 @@
             navigator.geolocation.watchPosition(
                 (position) => {
                     liveGpsActive = true;
-                    gpsStatusEl.textContent = "GPS ON";
-                    gpsStatusEl.className = "gps-on";
-
+gpsStatusEl.textContent = "GPS ON";
+gpsStatusEl.className = "gps-on";
 const altitude = position.coords.altitude !== null ? position.coords.altitude : 0;
 renderColumn(altitudeColumn, altitude, 'M');
 const speedMPS = position.coords.speed !== null ? position.coords.speed : 0;
@@ -288,7 +288,7 @@ idleStatusEl.style.display = 'block';
 renderColumn(altitudeColumn, 0, 'M');
 renderColumn(speedColumn, 0, 'KM/H');
 }
-                        },
+                },
                 {
                     enableHighAccuracy: true,
                     maximumAge: 0,
@@ -306,4 +306,3 @@ renderColumn(speedColumn, 0, 'KM/H');
     </script>
 </body>
 </html>
-
