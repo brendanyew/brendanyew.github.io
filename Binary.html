@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Infinite Binary Grid Visualizer</title>
+    <title>Truly Infinite Binary Grid</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -52,22 +52,23 @@
             overflow-x: auto;
             cursor: grab;
             user-select: none;
-            scrollbar-width: auto;
         }
         .grid-container:active { cursor: grabbing; }
         .grid-track {
             display: flex;
-            padding: 0 40px;
             width: max-content;
+            position: relative;
+            height: 140px;
         }
         .column {
             display: flex;
             flex-direction: column;
             align-items: center;
             width: 90px;
-            flex-shrink: 0;
+            position: absolute;
+            top: 0;
             border-right: 1px dashed #334155;
-            position: relative;
+            box-sizing: border-box;
         }
         .column.radix-point {
             width: 40px;
@@ -93,8 +94,12 @@
             font-weight: bold;
             height: 35px;
             text-align: center;
-            word-break: break-all;
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
             padding: 0 4px;
+            box-sizing: border-box;
         }
         .bit-box {
             width: 55px;
@@ -106,7 +111,7 @@
             justify-content: center;
             font-size: 1.6rem;
             font-weight: bold;
-            margin: 15px 0;
+            margin: 10px 0;
             transition: all 0.2s ease;
             box-shadow: 0 4px 6px rgba(0,0,0,0.15);
         }
@@ -119,7 +124,6 @@
         .multiplier {
             font-size: 0.75rem;
             color: #64748b;
-            margin-top: 5px;
         }
         .binary-string {
             margin-top: 30px;
@@ -130,8 +134,10 @@
             border-radius: 8px;
             border: 1px solid #334155;
             color: #38bdf8;
+            word-break: break-all;
+            max-width: 90%;
+            text-align: center;
         }
-        .binary-string span { color: #94a3b8; font-size: 1rem; }
     </style>
 </head>
 <body>
@@ -140,16 +146,20 @@
   <img src="Logo.png" alt="Brendan's Website">
 </a>
     <h1>Infinite Binary Scroll Visualiser</h1>
-    <p>Type a decimal number below, then click and drag the table horizontally to scroll through the place values forever!</p>
+    <p>Drag horizontally endlessly. Columns will calculate dynamically out into infinite powers of 2!</p>
 
     <div class="controls">
         <label for="decimalInput">Decimal Number:</label>
-        <input type="number" id="decimalInput" value="13.5" step="any" min="0">
+        <input type="text" id="decimalInput" value="13.5">
     </div>
 
     <div class="grid-container" id="scrollContainer">
         <div class="grid-track" id="gridTrack">
-            <!-- Dynamically populated via JS -->
+            <!-- Radix point remains our mathematical anchor -->
+            <div class="column radix-point" id="radixPoint" style="left: 10000px;">
+                <span>.</span>
+                <div class="label">Point</div>
+            </div>
         </div>
     </div>
 
@@ -160,146 +170,174 @@
         const track = document.getElementById('gridTrack');
         const container = document.getElementById('scrollContainer');
         const output = document.getElementById('binaryOutput');
+        const radixPoint = document.getElementById('radixPoint');
 
-        // Configuration limits for the visual engine (effectively infinite scrolling)
-        const LEFT_BITS = 30;  // Up to 536,870,912
-        const RIGHT_BITS = 30; // Down to 1/536,870,912
+        const COL_WIDTH = 90;
+        const RADIX_WIDTH = 40;
+        const RADIX_CENTER_X = 10000; // Big virtual space anchor to slide indefinitely left or right
 
-        function updateGrid() {
-            const val = parseFloat(input.value) || 0;
-            track.innerHTML = '';
+        let activeColumns = new Map();
 
-            let wholePart = Math.floor(val);
-            let fracPart = val - wholePart;
-
-            // Generate Columns Left of Decimal (Whole Numbers)
-            const leftCols = [];
-            for (let i = LEFT_BITS - 1; i >= 0; i--) {
-                const placeValue = Math.pow(2, i);
-                const bit = (wholePart >= placeValue) ? 1 : 0;
-                if (bit === 1) wholePart -= placeValue;
-
-                leftCols.push({
-                    heading: placeValue.toLocaleString(),
-                    bit: bit,
-                    mult: i === 0 ? "" : "×2 ←"
-                });
-            }
-            
-            // Trim leading zeros visually to center the active view, but keep a structural buffer
-            let firstActive = leftCols.findIndex(c => c.bit === 1);
-            if (firstActive === -1) firstActive = LEFT_BITS - 4; // default view window fallback
-            const visibleLeft = leftCols.slice(Math.max(0, firstActive - 4));
-
-            visibleLeft.forEach(col => {
-                createColumnElement(col.heading, col.bit, col.mult);
-            });
-
-            // Insert Visual Radix Point (Decimal Dot)
-            const dot = document.createElement('div');
-            dot.className = 'column radix-point';
-            dot.innerHTML = '<span>.</span><div class="label">Point</div>';
-            track.appendChild(dot);
-
-            // Generate Columns Right of Decimal (Fractions)
-            let tempFrac = fracPart;
-            const rightCols = [];
-            for (let i = 1; i <= RIGHT_BITS; i++) {
-                const placeValue = 1 / Math.pow(2, i);
-                let bit = 0;
+        function getBitAtPower(valStr, power) {
+            try {
+                // Precision parsing for absolute mathematical integrity
+                const dotIdx = valStr.indexOf('.');
+                let wholeStr = dotIdx === -1 ? valStr : valStr.substring(0, dotIdx);
+                let fracStr = dotIdx === -1 ? "" : valStr.substring(dotIdx + 1);
                 
-                // Use standard decimal multiplication strategy matching curriculum guidelines
-                tempFrac *= 2;
-                if (tempFrac >= 1) {
-                    bit = 1;
-                    tempFrac -= 1;
+                wholeStr = wholeStr.replace(/^0+/, "") || "0";
+                
+                if (power >= 0) {
+                    let num = BigInt(wholeStr);
+                    return Number((num >> BigInt(power)) & 1n);
+                } else {
+                    let targetFrac = parseFloat("0." + fracStr) || 0;
+                    let bit = 0;
+                    let currentPower = -1;
+                    
+                    // Standard dynamic sequence evaluation to find sub-fraction alignments
+                    while (currentPower >= power) {
+                        targetFrac *= 2;
+                        if (targetFrac >= 1) {
+                            bit = 1;
+                            targetFrac -= 1;
+                        } else {
+                            bit = 0;
+                        }
+                        if (currentPower === power) return bit;
+                        currentPower--;
+                    }
+                }
+            } catch(e) { return 0; }
+            return 0;
+        }
+
+        function formatHeader(power) {
+            if (power >= 0) {
+                if (power > 6) return `2¹³ (${Math.pow(2, power).toLocaleString()})`.replace('1³', power);
+                return Math.pow(2, power).toLocaleString();
+            } else {
+                const absP = Math.abs(power);
+                if (absP > 4) return `1/2¹³`.replace('1³', absP);
+                return (1 / Math.pow(2, absP)).toString();
+            }
+        }
+
+        function renderVisibleRange() {
+            const currentVal = input.value || "0";
+            const scrollLeft = container.scrollLeft;
+            const containerWidth = container.offsetWidth;
+            
+            // Map pixel coordinates to column place-values relative to the fixed center anchor
+            const startX = scrollLeft - 100;
+            const endX = scrollLeft + containerWidth + 100;
+
+            const minPower = Math.ceil((RADIX_CENTER_X + RADIX_WIDTH - endX) / COL_WIDTH) * -1;
+            const maxPower = Math.floor((RADIX_CENTER_X - startX) / COL_WIDTH);
+
+            let renderedKeys = new Set();
+
+            for (let p = minPower; p <= maxPower; p++) {
+                if (p === 0 && minPower > 0) continue; 
+                renderedKeys.add(p);
+
+                let xPos = 0;
+                if (p >= 0) {
+                    xPos = RADIX_CENTER_X - ((p + 1) * COL_WIDTH);
+                } else {
+                    xPos = RADIX_CENTER_X + RADIX_WIDTH + ((Math.abs(p) - 1) * COL_WIDTH);
                 }
 
-                // Format nice fractional lookup strings (e.g. 0.5, 0.25)
-                let displayValue = placeValue.toString();
-                if (displayValue.length > 8) displayValue = `1/${Math.pow(2, i)}`;
+                const bit = getBitAtPower(currentVal, p);
+                const heading = formatHeader(p);
+                const multiplier = p >= 0 ? (p === 0 ? "" : "×2 ←") : "→ /2";
 
-                rightCols.push({
-                    heading: displayValue,
-                    bit: bit,
-                    mult: "→ /2"
-                });
+                if (activeColumns.has(p)) {
+                    const colEl = activeColumns.get(p);
+                    const box = colEl.querySelector('.bit-box');
+                    box.textContent = bit;
+                    if (bit) box.classList.add('active');
+                    else box.classList.remove('active');
+                } else {
+                    const col = document.createElement('div');
+                    col.className = 'column';
+                    col.style.left = `${xPos}px`;
+                    col.innerHTML = `
+                        <div class="header-val" title="${heading}">${heading}</div>
+                        <div class="bit-box ${bit ? 'active' : ''}">${bit}</div>
+                        <div class="multiplier">${multiplier}</div>
+                    `;
+                    track.appendChild(col);
+                    activeColumns.set(p, col);
+                }
             }
 
-            // Find last active trailing bit to clean up structural infinity rendering
-            let lastActive = rightCols.map(c => c.bit).lastIndexOf(1);
-            if (lastActive === -1) lastActive = 3; 
-            const visibleRight = rightCols.slice(0, Math.max(8, lastActive + 5));
-
-            visibleRight.forEach(col => {
-                createColumnElement(col.heading, col.bit, col.mult);
-            });
-
-            // Update bottom plain-text label output
-            let binaryStr = visibleLeft.map(c => c.bit).join('').replace(/^0+/, '') || '0';
-            let fracStr = visibleRight.map(c => c.bit).join('').replace(/0+$/, '');
-            output.innerHTML = `Binary: <strong>${binaryStr}${fracStr ? '.' + fracStr : ''}</strong>`;
+            // Remove columns that slide completely off-screen to preserve memory
+            for (let [p, el] of activeColumns.entries()) {
+                if (!renderedKeys.has(p)) {
+                    el.remove();
+                    activeColumns.delete(p);
+                }
+            }
         }
 
-        function createColumnElement(heading, bit, multiplier) {
-            const col = document.createElement('div');
-            col.className = 'column';
-            
-            col.innerHTML = `
-                <div class="header-val">${heading}</div>
-                <div class="bit-box ${bit ? 'active' : ''}">${bit}</div>
-                <div class="multiplier">${multiplier}</div>
-            `;
-            track.appendChild(col);
-        }
-
-        // Drag to Scroll satisfying implementation
-        let isDown = false;
-        let startX;
-        let scrollLeft;
-
-        container.addEventListener('mousedown', (e) => {
-            isDown = true;
-            container.classList.add('active');
-            startX = e.pageX - container.offsetLeft;
-            scrollLeft = container.scrollLeft;
-        });
-        container.addEventListener('mouseleave', () => {
-            isDown = false;
-        });
-        container.addEventListener('mouseup', () => {
-            isDown = false;
-        });
-        container.addEventListener('mousemove', (e) => {
-            if(!isDown) return;
-            e.preventDefault();
-            const x = e.pageX - container.offsetLeft;
-            const walk = (x - startX) * 1.5;
-            container.scrollLeft = scrollLeft - walk;
-        });
-
-        input.addEventListener('input', updateGrid);
-        
-        // Initial build runtime execution
-        updateGrid();
-        // Center scroll window over the decimal point on page load
-setTimeout(() => {
-const dotElement = document.querySelector('.radix-point');
-if (dotElement) {
-container.scrollLeft = dotElement.offsetLeft - (container.offsetWidth / 2) + 20;
+function updateBinaryString() {
+try {
+const parts = input.value.split('.');
+let whole = BigInt(parts[0] || 0).toString(2);
+let frac = "";
+if (parts) {
+let f = parseFloat("0." + parts);
+for (let i = 0; i < 20; i++) {
+f *= 2;
+if (f >= 1) { frac += "1"; f -= 1; }
+else { frac += "0"; }
 }
-}, 50);
-              input.addEventListener('input', updateGrid);
+frac = frac.replace(/0+$/, '');
+}
+output.innerHTML = Binary String Preview: <strong>${whole}${frac ? '.' + frac : ''}</strong>;
+} catch(e) {}
+}
+// Seamless Drag-to-Scroll Mechanics
+let isDown = false;
+let startX, sLeft;
+container.addEventListener('mousedown', (e) => {
+isDown = true;
+startX = e.pageX - container.offsetLeft;
+sLeft = container.scrollLeft;
+});
+container.addEventListener('mouseleave', () => isDown = false);
+container.addEventListener('mouseup', () => isDown = false);
+container.addEventListener('mousemove', (e) => {
+if (!isDown) return;
+e.preventDefault();
+const x = e.pageX - container.offsetLeft;
+const walk = (x - startX) * 1.5;
+container.scrollLeft = sLeft - walk;
+renderVisibleRange();
+});
+container.addEventListener('scroll', renderVisibleRange);
+input.addEventListener('input', () => {
+renderVisibleRange();
+updateBinaryString();
+});
+// Initialize viewport centered at the radix line point
+window.addEventListener('resize', renderVisibleRange);
+// Match explicit grid canvas dimensions inside the virtual workspace
+track.style.width = '20000px';
+container.scrollLeft = RADIX_CENTER_X - (container.offsetWidth / 2) + (RADIX_WIDTH / 2);
+renderVisibleRange();
+updateBinaryString();
+                // Initialize viewport centered at the radix line point
+        window.addEventListener('resize', renderVisibleRange);
         
-        // Initial build runtime execution
-        updateGrid();
-        // Center scroll window over the decimal point on page load
-        setTimeout(() => {
-            const dotElement = document.querySelector('.radix-point');
-            if (dotElement) {
-                container.scrollLeft = dotElement.offsetLeft - (container.offsetWidth / 2) + 20;
-            }
-        }, 50);
+        // Match explicit grid canvas dimensions inside the virtual workspace
+        track.style.width = '20000px'; 
+        container.scrollLeft = RADIX_CENTER_X - (container.offsetWidth / 2) + (RADIX_WIDTH / 2);
+        
+        renderVisibleRange();
+        updateBinaryString();
     </script>
 </body>
 </html>
+
