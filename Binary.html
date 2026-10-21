@@ -56,7 +56,7 @@
         .grid-container:active { cursor: grabbing; }
         .grid-track {
             display: flex;
-            width: max-content;
+            width: 100000px; /* Massive virtual width to allow scrolling */
             position: relative;
             height: 140px;
         }
@@ -142,21 +142,18 @@
 </head>
 <body>
 
-<a href="index.html">
-  <img src="Logo.png" alt="Brendan's Website">
-</a>
     <h1>Infinite Binary Scroll Visualiser</h1>
     <p>Drag horizontally endlessly. Columns will calculate dynamically out into infinite powers of 2!</p>
 
     <div class="controls">
         <label for="decimalInput">Decimal Number:</label>
-        <input type="text" id="decimalInput" value="13.5">
+        <input type="number" id="decimalInput" value="13.5" step="any">
     </div>
 
     <div class="grid-container" id="scrollContainer">
         <div class="grid-track" id="gridTrack">
-            <!-- Radix point remains our mathematical anchor -->
-            <div class="column radix-point" id="radixPoint" style="left: 10000px;">
+            <!-- Radix point is our spatial baseline anchor -->
+            <div class="column radix-point" id="radixPoint" style="left: 50000px;">
                 <span>.</span>
                 <div class="label">Point</div>
             </div>
@@ -174,63 +171,57 @@
 
         const COL_WIDTH = 90;
         const RADIX_WIDTH = 40;
-        const RADIX_CENTER_X = 10000; // Big virtual space anchor to slide indefinitely left or right
+        const RADIX_CENTER_X = 50000; 
 
         let activeColumns = new Map();
 
-        function getBitAtPower(valStr, power) {
-            try {
-                // Precision parsing for absolute mathematical integrity
-                const dotIdx = valStr.indexOf('.');
-                let wholeStr = dotIdx === -1 ? valStr : valStr.substring(0, dotIdx);
-                let fracStr = dotIdx === -1 ? "" : valStr.substring(dotIdx + 1);
+        function getBitAtPower(val, power) {
+            let wholePart = Math.floor(val);
+            let fracPart = val - wholePart;
+
+            if (power >= 0) {
+                // Shift down to target bit layout position
+                return (wholePart >> power) & 1;
+            } else {
+                let tempFrac = fracPart;
+                let bit = 0;
+                let currentPower = -1;
                 
-                wholeStr = wholeStr.replace(/^0+/, "") || "0";
-                
-                if (power >= 0) {
-                    let num = BigInt(wholeStr);
-                    return Number((num >> BigInt(power)) & 1n);
-                } else {
-                    let targetFrac = parseFloat("0." + fracStr) || 0;
-                    let bit = 0;
-                    let currentPower = -1;
-                    
-                    // Standard dynamic sequence evaluation to find sub-fraction alignments
-                    while (currentPower >= power) {
-                        targetFrac *= 2;
-                        if (targetFrac >= 1) {
-                            bit = 1;
-                            targetFrac -= 1;
-                        } else {
-                            bit = 0;
-                        }
-                        if (currentPower === power) return bit;
-                        currentPower--;
+                // Track standard base-2 scaling multiplication loop
+                while (currentPower >= power) {
+                    tempFrac *= 2;
+                    if (tempFrac >= 1) {
+                        bit = 1;
+                        tempFrac -= 1;
+                    } else {
+                        bit = 0;
                     }
+                    if (currentPower === power) return bit;
+                    currentPower--;
                 }
-            } catch(e) { return 0; }
+            }
             return 0;
         }
 
         function formatHeader(power) {
             if (power >= 0) {
-                if (power > 6) return `2¹³ (${Math.pow(2, power).toLocaleString()})`.replace('1³', power);
+                if (power > 10) return `2^${power}`;
                 return Math.pow(2, power).toLocaleString();
             } else {
                 const absP = Math.abs(power);
-                if (absP > 4) return `1/2¹³`.replace('1³', absP);
+                if (absP > 6) return `1/(2^${absP})`;
                 return (1 / Math.pow(2, absP)).toString();
             }
         }
 
         function renderVisibleRange() {
-            const currentVal = input.value || "0";
+            const currentVal = parseFloat(input.value) || 0;
             const scrollLeft = container.scrollLeft;
             const containerWidth = container.offsetWidth;
             
-            // Map pixel coordinates to column place-values relative to the fixed center anchor
-            const startX = scrollLeft - 100;
-            const endX = scrollLeft + containerWidth + 100;
+            // Generate window view dimensions dynamically to spawn headers ahead of viewport layout
+            const startX = scrollLeft - 200;
+            const endX = scrollLeft + containerWidth + 200;
 
             const minPower = Math.ceil((RADIX_CENTER_X + RADIX_WIDTH - endX) / COL_WIDTH) * -1;
             const maxPower = Math.floor((RADIX_CENTER_X - startX) / COL_WIDTH);
@@ -238,7 +229,6 @@
             let renderedKeys = new Set();
 
             for (let p = minPower; p <= maxPower; p++) {
-                if (p === 0 && minPower > 0) continue; 
                 renderedKeys.add(p);
 
                 let xPos = 0;
@@ -272,7 +262,7 @@
                 }
             }
 
-            // Remove columns that slide completely off-screen to preserve memory
+            // Flush old columns to keep scrolling snappy and lightweight
             for (let [p, el] of activeColumns.entries()) {
                 if (!renderedKeys.has(p)) {
                     el.remove();
@@ -281,24 +271,24 @@
             }
         }
 
-function updateBinaryString() {
-try {
-const parts = input.value.split('.');
-let whole = BigInt(parts[0] || 0).toString(2);
-let frac = "";
-if (parts) {
-let f = parseFloat("0." + parts);
-for (let i = 0; i < 20; i++) {
-f *= 2;
-if (f >= 1) { frac += "1"; f -= 1; }
-else { frac += "0"; }
+        function updateBinaryString() {
+            const val = parseFloat(input.value) || 0;
+            let whole = Math.floor(val).toString(2);
+            let frac = val - Math.floor(val);
+            let fracStr = "";
+            
+            if (frac > 0) {
+                let temp = frac;
+                for (let i = 0; i < 12; i++) {
+                    temp *= 2;
+                    if (temp >= 1) { fracStr += "1"; temp -= 1; }
+                    else { fracStr += "0"; }
+                }
+                fracStr = fracStr.replace(/0+$/, '');
+            }
+output.innerHTML = Binary Output: <strong>${whole}${fracStr ? '.' + fracStr : ''}</strong>;
 }
-frac = frac.replace(/0+$/, '');
-}
-output.innerHTML = Binary String Preview: <strong>${whole}${frac ? '.' + frac : ''}</strong>;
-} catch(e) {}
-}
-// Seamless Drag-to-Scroll Mechanics
+// Drag to Scroll functionality mapping
 let isDown = false;
 let startX, sLeft;
 container.addEventListener('mousedown', (e) => {
@@ -321,18 +311,39 @@ input.addEventListener('input', () => {
 renderVisibleRange();
 updateBinaryString();
 });
-// Initialize viewport centered at the radix line point
 window.addEventListener('resize', renderVisibleRange);
-// Match explicit grid canvas dimensions inside the virtual workspace
-track.style.width = '20000px';
+// Move container canvas to midpoint anchor line on deployment step
 container.scrollLeft = RADIX_CENTER_X - (container.offsetWidth / 2) + (RADIX_WIDTH / 2);
 renderVisibleRange();
 updateBinaryString();
-                // Initialize viewport centered at the radix line point
+                let isDown = false;
+        let startX, sLeft;
+
+        container.addEventListener('mousedown', (e) => {
+            isDown = true;
+            startX = e.pageX - container.offsetLeft;
+            sLeft = container.scrollLeft;
+        });
+        container.addEventListener('mouseleave', () => isDown = false);
+        container.addEventListener('mouseup', () => isDown = false);
+        container.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - container.offsetLeft;
+            const walk = (x - startX) * 1.5;
+            container.scrollLeft = sLeft - walk;
+            renderVisibleRange();
+        });
+
+        container.addEventListener('scroll', renderVisibleRange);
+        input.addEventListener('input', () => {
+            renderVisibleRange();
+            updateBinaryString();
+        });
+
         window.addEventListener('resize', renderVisibleRange);
         
-        // Match explicit grid canvas dimensions inside the virtual workspace
-        track.style.width = '20000px'; 
+        // Move container canvas to midpoint anchor line on deployment step
         container.scrollLeft = RADIX_CENTER_X - (container.offsetWidth / 2) + (RADIX_WIDTH / 2);
         
         renderVisibleRange();
