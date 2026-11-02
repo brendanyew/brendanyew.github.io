@@ -96,79 +96,155 @@
       margin-top: 10px;
       display: none;
     }
+
+    #confirmBtn {
+      margin-top: 10px;
+      padding: 8px 20px;
+      cursor: pointer;
+    }
   </style>
 </head>
+
 <body>
+  <div class="logo">
+    <a href="index.html">
+      <img src="Logo.png" alt="Brendan's Website">
+    </a>
+  <h1>Choose Blue or Black</h1>
 
-  <div id="instructions">Complete the tasks to unlock the link.</div>
-  
-  <button onclick="pickColor('Red')">Red</button>
-  <button onclick="pickColor('Blue')">Blue</button>
+  <div id="instructions">
+    If the color you press gets shown below, you have just won yourself $500K
+  </div>
 
-  <div id="result">-</div>
-  <div id="message">Pick a color to start</div>
+  <button onclick="chooseColor('blue')">Blue</button>
+  <button onclick="chooseColor('black')">Black</button>
 
-  <!-- Active link that triggers the popup -->
-  <a id="transfer" class="active" href="#" onclick="openPopup(event)">Transfer Money</a>
+  <div id="result"></div>
+  <div id="message"></div>
 
-  <!-- Popup Box -->
+  <a id="transfer" href="#">Transfer money</a>
+
   <div id="popup">
     <div id="popupBox">
-      <div id="popupText">Enter Code: <span id="copyBtn" onclick="copyCode()">📋</span></div>
-      <input type="text" id="codeInput" placeholder="Enter transfer code...">
-      <button onclick="verifyCode()">→</button>
-      <div id="error"></div>
-      <button onclick="closePopup()" style="margin-top: 15px; padding: 5px 15px; font-size: 14px;">Cancel</button>
+
+      <div id="popupText">Enter Transfer Code</div>
+
+      <div>
+        <input id="codeInput" placeholder="Enter code">
+        <span id="copyBtn">📋</span>
+      </div>
+
+      <div id="error">Incorrect Code</div>
+
+      <button id="confirmBtn">→</button>
+
+      <br><br>
+      <button id="cancelBtn">Cancel</button>
+
     </div>
   </div>
 
-  <footer>Sponsored by neal.fun</footer>
-
   <script>
-    function pickColor(color) {
-      document.getElementById('result').innerText = color;
-      document.getElementById('message').innerText = "You selected " + color;
+    function generateCode() {
+      let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      let code = "";
+
+      for (let i = 0; i < 3; i++) {
+        let part = "";
+        for (let j = 0; j < 3; j++) {
+          part += chars[Math.floor(Math.random() * chars.length)];
+        }
+        code += part + (i < 2 ? "-" : "");
+      }
+
+      return code;
     }
 
-    function openPopup(e) {
-      e.preventDefault();
-      document.getElementById('popup').style.display = 'flex';
-    }
+    function chooseColor(choice) {
+      let resultDiv = document.getElementById('result');
+      let messageDiv = document.getElementById('message');
+      let transferLink = document.getElementById('transfer');
 
-    function closePopup() {
-      document.getElementById('popup').style.display = 'none';
-      document.getElementById('codeInput').value = '';
-      document.getElementById('error').style.display = 'none';
-    }
+      transferLink.classList.remove("active");
 
-    function verifyCode() {
-      const input = document.getElementById('codeInput').value;
-      const errorDiv = document.getElementById('error');
-      
-      if (input === 'Brendan') {
-        errorDiv.innerText = "ACCESS GRANTED";
-        errorDiv.style.color = "green";
-        errorDiv.style.display = 'block';
-        
+      if (Math.random() < 0.1) {
+        resultDiv.textContent = choice;
+        resultDiv.style.color = choice;
+
+        messageDiv.textContent = "WAIT... did you just win??";
+
+        transferLink.classList.add("active");
+
         setTimeout(() => {
-          alert("Talk to Brendan Yew (Owner of this website) to get your $500K");
-        }, 1000);
+          messageDiv.textContent = "Transfer Timed Out";
+          transferLink.classList.remove("active");
+        }, 50);
+
       } else {
-        errorDiv.innerText = "INCORRECT CODE";
-        errorDiv.style.color = "red";
-        errorDiv.style.display = 'block';
+        let result = (choice === 'blue') ? 'black' : 'blue';
+        resultDiv.textContent = result;
+        resultDiv.style.color = result;
+
+        let messages = [
+          "So close...",
+          "Better luck next time",
+          "That was almost it",
+          "You were THIS close",
+          "Oof, unlucky",
+          "Try again?"
+        ];
+
+        messageDiv.textContent =
+          messages[Math.floor(Math.random() * messages.length)];
       }
     }
 
-    function copyCode() {
-      navigator.clipboard.writeText("Brendan");
-      const copyBtn = document.getElementById('copyBtn');
-      copyBtn.innerText = "✔️";
-      
+    const popup = document.getElementById("popup");
+    const copyBtn = document.getElementById("copyBtn");
+    const error = document.getElementById("error");
+
+    document.getElementById("transfer").onclick = function(e) {
+      e.preventDefault();
+
+      if (!this.classList.contains("active")) return;
+
+      popup.style.display = "flex";
+      error.style.display = "none";
+    };
+
+    document.getElementById("cancelBtn").onclick = function() {
+      popup.style.display = "none";
+    };
+
+    copyBtn.onclick = function() {
+      let text = generateCode();
+
+      let tempInput = document.createElement("input");
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+
+      tempInput.select();
+      tempInput.setSelectionRange(0, 99999);
+
+      try {
+        document.execCommand("copy");
+      } catch (err) {
+        prompt("Copy this code:", text);
+      }
+
+      document.body.removeChild(tempInput);
+
+      copyBtn.textContent = "✔️";
+
       setTimeout(() => {
-        copyBtn.innerText = "📋";
+        copyBtn.textContent = "📋";
       }, 1000);
-    }
+    };
+
+    document.getElementById("confirmBtn").onclick = function() {
+      error.style.display = "block";
+    };
   </script>
+
 </body>
 </html>
