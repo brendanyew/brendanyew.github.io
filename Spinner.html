@@ -92,24 +92,14 @@
     }
 
     #error {
-      color: green; /* Changed to green for access granted aesthetic */
+      color: red;
       margin-top: 10px;
       display: none;
-      font-weight: bold;
-    }
-
-    footer {
-      margin-top: 100px;
-      font-size: 14px;
-      color: #666;
     }
   </style>
 </head>
 <body>
 
- <a href="index.html">
-      <img src="Logo.png" alt="Brendan's Website">
-    </a>
   <div id="instructions">Complete the tasks to unlock the link.</div>
   
   <button onclick="pickColor('Red')">Red</button>
@@ -126,8 +116,9 @@
     <div id="popupBox">
       <div id="popupText">Enter Code: <span id="copyBtn" onclick="copyCode()">📋</span></div>
       <input type="text" id="codeInput" placeholder="Enter transfer code...">
-      <button onclick="verifyCode()">Submit</button>
+      <button onclick="verifyCode()">→</button>
       <div id="error"></div>
+      <button onclick="closePopup()" style="margin-top: 15px; padding: 5px 15px; font-size: 14px;">Cancel</button>
     </div>
   </div>
 
@@ -144,37 +135,40 @@
       document.getElementById('popup').style.display = 'flex';
     }
 
+    function closePopup() {
+      document.getElementById('popup').style.display = 'none';
+      document.getElementById('codeInput').value = '';
+      document.getElementById('error').style.display = 'none';
+    }
+
     function verifyCode() {
       const input = document.getElementById('codeInput').value;
       const errorDiv = document.getElementById('error');
       
-      // Match the required code "Brendan"
       if (input === 'Brendan') {
-        errorDiv.innerText = "Access Granted";
+        errorDiv.innerText = "ACCESS GRANTED";
         errorDiv.style.color = "green";
         errorDiv.style.display = 'block';
         
-        // Automatically redirect to the Neal.fun 'I am not a robot' level after a brief delay
         setTimeout(() => {
-          window.location.href = "https://neal.fun"; 
+          alert("Talk to Brendan Yew (Owner of this website) to get your $500K");
         }, 1000);
       } else {
-        // Updated state to show Access Granted on incorrect code submission as well
-        errorDiv.innerText = "Access Granted";
-        errorDiv.style.color = "green";
+        errorDiv.innerText = "INCORRECT CODE";
+        errorDiv.style.color = "red";
         errorDiv.style.display = 'block';
-        
-        setTimeout(() => {
-          window.location.href = "https://neal.fun";
-        }, 1000);
       }
     }
 
     function copyCode() {
       navigator.clipboard.writeText("Brendan");
-      alert("Code copied to clipboard!");
+      const copyBtn = document.getElementById('copyBtn');
+      copyBtn.innerText = "✔️";
+      
+      setTimeout(() => {
+        copyBtn.innerText = "📋";
+      }, 1000);
     }
   </script>
 </body>
 </html>
-
