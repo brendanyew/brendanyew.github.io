@@ -40,7 +40,7 @@
             font-weight: 600;
             font-size: 0.9rem;
         }
-        select {
+        select, input[type="number"] {
             width: 100%;
             padding: 0.75rem;
             border: 2px solid #ddd;
@@ -51,7 +51,7 @@
             transition: border-color 0.3s;
             box-sizing: border-box;
         }
-        select:focus {
+        select:focus, input[type="number"]:focus {
             border-color: #4a54f1;
         }
         button {
@@ -150,10 +150,8 @@
         </div>
 
         <div class="form-group">
-            <label for="daySelect">Select Day</label>
-            <select id="daySelect">
-                <!-- Dynamically populated via JavaScript -->
-            </select>
+            <label for="dayInput">Type Day (1-31)</label>
+            <input type="number" id="dayInput" min="1" max="31" placeholder="e.g. 25" required>
         </div>
 
         <button id="startButton">Start Countdown</button>
@@ -174,7 +172,7 @@
 
 <script>
     const monthSelect = document.getElementById('monthSelect');
-    const daySelect = document.getElementById('daySelect');
+    const dayInput = document.getElementById('dayInput');
     const startButton = document.getElementById('startButton');
     const countdownPanel = document.getElementById('countdownPanel');
     const celebrationMessage = document.getElementById('celebrationMessage');
@@ -188,32 +186,23 @@
 
     let countdownInterval;
 
-    function populateDays() {
-        const month = parseInt(monthSelect.value);
-        const currentYear = new Date().getFullYear();
-        const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
-        
-        const previousSelection = daySelect.value;
-        daySelect.innerHTML = '';
-        
-        for (let i = 1; i <= daysInMonth; i++) {
-            const option = document.createElement('option');
-            option.value = i;
-            option.textContent = i;
-            daySelect.appendChild(option);
-        }
-
-        if (previousSelection && previousSelection <= daysInMonth) {
-            daySelect.value = previousSelection;
-        }
-    }
-
-    monthSelect.addEventListener('change', populateDays);
-    populateDays();
-
     startButton.addEventListener('click', () => {
         const targetMonth = parseInt(monthSelect.value);
-        const targetDay = parseInt(daySelect.value);
+        let targetDay = parseInt(dayInput.value);
+
+        // Simple validation check for input
+        if (isNaN(targetDay) || targetDay < 1 || targetDay > 31) {
+            alert("Please enter a valid day between 1 and 31.");
+            return;
+        }
+
+        // Clamp the date max based on the chosen month (e.g. February max 28/29)
+        const currentYear = new Date().getFullYear();
+        const maxDays = new Date(currentYear, targetMonth + 1, 0).getDate();
+        if (targetDay > maxDays) {
+            targetDay = maxDays;
+            dayInput.value = maxDays;
+        }
 
         document.getElementById('setup-panel').style.display = 'none';
         countdownPanel.style.display = 'block';
@@ -275,12 +264,14 @@
 
             const oneDayInMs = 24 * 60 * 60 * 1000;
             if (diff <= oneDayInMs) {
-timeBoxes.forEach(box => box.classList.add('urgent'));
-} else {
-timeBoxes.forEach(box => box.classList.remove('urgent'));
-}
-celebrationMessage.style.display = 'none';
-}
+                timeBoxes.forEach(box => box.classList.add('urgent'));
+            } else {
+                timeBoxes.forEach(box => box.classList.remove('urgent'));
+            }
+
+            celebrationMessage.style.display = 'none';
+        }
+
 updateCountdown();
 countdownInterval = setInterval(updateCountdown, 1000);
 });
@@ -291,4 +282,3 @@ countdownInterval = setInterval(updateCountdown, 1000);
 
 </body>
 </html>
-
