@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday Countdown</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            padding: 2.5rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        h1 {
+            margin-top: 0;
+            color: #4a54f1;
+            font-size: 1.8rem;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: #fff;
+            outline: none;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        select:focus {
+            border-color: #4a54f1;
+        }
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #4a54f1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        button:hover {
+            background-color: #373fd3;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        .countdown-display {
+            display: none;
+            margin-top: 2rem;
+        }
+        .timer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            gap: 5px;
+        }
+        .time-box {
+            background-color: #f0f2ff;
+            padding: 0.75rem 0.5rem;
+            border-radius: 8px;
+            flex: 1;
+            min-width: 65px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+            transition: color 0.5s ease;
+        }
+        .number {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #000000;
+            display: block;
+            transition: color 0.5s ease;
+        }
+        .label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #666;
+            letter-spacing: 1px;
+            display: block;
+            margin-top: 2px;
+            transition: color 0.5s ease;
+        }
+        /* Style applied to both numbers and labels when time <= 24 hours */
+        .urgent .number,
+        .urgent .label {
+            color: #ff3b30;
+        }
+        .celebration {
+            font-size: 2rem;
+            color: #ff4081;
+            font-weight: bold;
+            animation: pulse 1s infinite alternate;
+            display: none;
+            margin-top: 1.5rem;
+        }
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎈 Birthday Countdown</h1>
+    
+    <div id="setup-panel">
+        <div class="form-group">
+            <label for="monthSelect">Select Month</label>
+            <select id="monthSelect">
+                <option value="0">January</option>
+                <option value="1">February</option>
+                <option value="2">March</option>
+                <option value="3">April</option>
+                <option value="4">May</option>
+                <option value="5">June</option>
+                <option value="6">July</option>
+                <option value="7">August</option>
+                <option value="8">September</option>
+                <option value="9">October</option>
+                <option value="10">November</option>
+                <option value="11">December</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="daySelect">Select Day</label>
+            <select id="daySelect">
+                <!-- Populated by JavaScript -->
+            </select>
+        </div>
+
+        <button id="startButton">Start Countdown</button>
+    </div>
+
+    <div id="countdownPanel" class="countdown-display">
+        <h2 id="countdownHeading">Time until your birthday:</h2>
+        <div class="timer">
+            <div class="time-box" id="box-months"><span class="number" id="months">00</span><span class="label">Months</span></div>
+            <div class="time-box" id="box-days"><span class="number" id="days">00</span><span class="label">Days</span></div>
+            <div class="time-box" id="box-hours"><span class="number" id="hours">00</span><span class="label">Hrs</span></div>
+            <div class="time-box" id="box-minutes"><span class="number" id="minutes">00</span><span class="label">Mins</span></div>
+            <div class="time-box" id="box-seconds"><span class="number" id="seconds">00</span><span class="label">Secs</span></div>
+        </div>
+        <div id="celebrationMessage" class="celebration">🎉 Happy Birthday! 🎂</div>
+    </div>
+</div>
+
+<script>
+    const monthSelect = document.getElementById('monthSelect');
+    const daySelect = document.getElementById('daySelect');
+    const startButton = document.getElementById('startButton');
+    const countdownPanel = document.getElementById('countdownPanel');
+    const celebrationMessage = document.getElementById('celebrationMessage');
+    
+    const monthsSpan = document.getElementById('months');
+    const daysSpan = document.getElementById('days');
+    const hoursSpan = document.getElementById('hours');
+    const minutesSpan = document.getElementById('minutes');
+    const secondsSpan = document.getElementById('seconds');
+    const timeBoxes = document.querySelectorAll('.time-box');
+
+    let countdownInterval;
+
+    function populateDays() {
+        const month = parseInt(monthSelect.value);
+        const currentYear = new Date().getFullYear();
+        const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
+        
+        const previousSelection = daySelect.value;
+        daySelect.innerHTML = '';
+        
+        for (let i = 1; i <= daysInMonth; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            daySelect.appendChild(option);
+        }
+
+        if (previousSelection && previousSelection <= daysInMonth) {
+            daySelect.value = previousSelection;
+        }
+    }
+
+    monthSelect.addEventListener('change', populateDays);
+    populateDays();
+
+    startButton.addEventListener('click', () => {
+        const targetMonth = parseInt(monthSelect.value);
+        const targetDay = parseInt(daySelect.value);
+
+        document.getElementById('setup-panel').style.display = 'none';
+        countdownPanel.style.display = 'block';
+
+        if (countdownInterval) clearInterval(countdownInterval);
+
+        function updateCountdown() {
+            const now = new Date();
+            let targetYear = now.getFullYear();
+            let targetDate = new Date(targetYear, targetMonth, targetDay, 0, 0, 0);
+
+            if (now > targetDate) {
+                if (now.getDate() === targetDay && now.getMonth() === targetMonth) {
+                    monthsSpan.textContent = '00';
+                    daysSpan.textContent = '00';
+                    hoursSpan.textContent = '00';
+                    minutesSpan.textContent = '00';
+                    secondsSpan.textContent = '00';
+                    timeBoxes.forEach(box => box.classList.add('urgent'));
+                    celebrationMessage.style.display = 'block';
+                    clearInterval(countdownInterval);
+                    return;
+                }
+                targetDate.setFullYear(targetYear + 1);
+            }
+
+            const diff = targetDate - now;
+
+            if (diff <= 0) {
+                monthsSpan.textContent = '00';
+                daysSpan.textContent = '00';
+                hoursSpan.textContent = '00';
+                minutesSpan.textContent = '00';
+                secondsSpan.textContent = '00';
+                timeBoxes.forEach(box => box.classList.add('urgent'));
+                celebrationMessage.style.display = 'block';
+                clearInterval(countdownInterval);
+                return;
+            }
+
+            // Calendar-accurate Month & Day difference calculation
+            let mDiff = targetDate.getMonth() - now.getMonth() + (12 * (targetDate.getFullYear() - now.getFullYear()));
+            let dDiff = targetDate.getDate() - now.getDate();
+            
+            // Adjust months if days cross over monthly boundaries
+            if (dDiff < 0) {
+                mDiff--;
+                // Find total days in the previous month relative to the target
+                const prevMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 0);
+                dDiff += prevMonth.getDate();
+            }
+
+            // Standard breakdown for remaining hours, minutes, seconds
+            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+            monthsSpan.textContent = mDiff.toString().padStart(2, '0');
+            daysSpan.textContent = dDiff.toString().padStart(2, '0');
+hoursSpan.textContent = h.toString().padStart(2, '0');
+minutesSpan.textContent = m.toString().padStart(2, '0');
+secondsSpan.textContent = s.toString().padStart(2, '0');
+// Apply urgent red theme to both text and labels if 24 hours (1 day) or less remain
+const oneDayInMs = 24 * 60 * 60 * 1000;
+if (diff <= oneDayInMs) {
+timeBoxes.forEach(box => box.classList.add('urgent'));
+} else {
+timeBoxes.forEach(box => box.classList.remove('urgent'));
+}
+celebrationMessage.style.display = 'none';
+}
+updateCountdown();
+countdownInterval = setInterval(updateCountdown, 1000);
+});
+        updateCountdown();
+        countdownInterval = setInterval(updateCountdown, 1000);
+    });
+</script>
+
+</body>
+</html>
