@@ -107,7 +107,6 @@
             margin-top: 2px;
             transition: color 0.5s ease;
         }
-        /* Style applied to both numbers and labels when time <= 24 hours */
         .urgent .number,
         .urgent .label {
             color: #ff3b30;
@@ -153,7 +152,7 @@
         <div class="form-group">
             <label for="daySelect">Select Day</label>
             <select id="daySelect">
-                <!-- Populated by JavaScript -->
+                <!-- Dynamically populated via JavaScript -->
             </select>
         </div>
 
@@ -255,31 +254,27 @@
                 return;
             }
 
-            // Calendar-accurate Month & Day difference calculation
             let mDiff = targetDate.getMonth() - now.getMonth() + (12 * (targetDate.getFullYear() - now.getFullYear()));
             let dDiff = targetDate.getDate() - now.getDate();
             
-            // Adjust months if days cross over monthly boundaries
             if (dDiff < 0) {
                 mDiff--;
-                // Find total days in the previous month relative to the target
                 const prevMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 0);
                 dDiff += prevMonth.getDate();
             }
 
-            // Standard breakdown for remaining hours, minutes, seconds
             const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const s = Math.floor((diff % (1000 * 60)) / 1000);
 
             monthsSpan.textContent = mDiff.toString().padStart(2, '0');
             daysSpan.textContent = dDiff.toString().padStart(2, '0');
-hoursSpan.textContent = h.toString().padStart(2, '0');
-minutesSpan.textContent = m.toString().padStart(2, '0');
-secondsSpan.textContent = s.toString().padStart(2, '0');
-// Apply urgent red theme to both text and labels if 24 hours (1 day) or less remain
-const oneDayInMs = 24 * 60 * 60 * 1000;
-if (diff <= oneDayInMs) {
+            hoursSpan.textContent = h.toString().padStart(2, '0');
+            minutesSpan.textContent = m.toString().padStart(2, '0');
+            secondsSpan.textContent = s.toString().padStart(2, '0');
+
+            const oneDayInMs = 24 * 60 * 60 * 1000;
+            if (diff <= oneDayInMs) {
 timeBoxes.forEach(box => box.classList.add('urgent'));
 } else {
 timeBoxes.forEach(box => box.classList.remove('urgent'));
@@ -289,10 +284,11 @@ celebrationMessage.style.display = 'none';
 updateCountdown();
 countdownInterval = setInterval(updateCountdown, 1000);
 });
-        updateCountdown();
+            updateCountdown();
         countdownInterval = setInterval(updateCountdown, 1000);
     });
 </script>
 
 </body>
 </html>
+
