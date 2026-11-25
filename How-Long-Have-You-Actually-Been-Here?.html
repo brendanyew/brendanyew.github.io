@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Time on Website</title>
+  <style>
+    body {
+      background-color: #ffffff;
+      color: #000000;
+      font-family: Arial, Helvetica, sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      font-weight: bold;
+    }
+
+    .counter-container {
+      font-size: 4rem;
+      font-weight: bold;
+      /* Tabular numbers prevent the text from jittering as digits change */
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 2px;
+    }
+
+    .unit {
+      font-size: 0.75em; /* Slightly smaller than the numbers beside it */
+    }
+  </style>
+</head>
+<body>
+
+  <h1>How long you've been on this website</h1>
+  
+  <div class="counter-container">
+    <span id="seconds">00000000</span><span class="unit">S</span>
+  </div>
+
+  <script>
+    let secondsElapsed = 0;
+    let timerInterval = null;
+    const displayElement = document.getElementById('seconds');
+
+    function updateDisplay() {
+      displayElement.textContent = String(secondsElapsed).padStart(8, '0');
+    }
+
+    function startTimer() {
+      // Clear any existing timer just in case
+      clearInterval(timerInterval);
+      
+      timerInterval = setInterval(() => {
+        secondsElapsed++;
+        updateDisplay();
+      }, 1000);
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      secondsElapsed = 0;
+      updateDisplay();
+    }
+
+    // Detects when the user switches tabs, minimises the window, or navigates away
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        resetTimer();
+      } else {
+        startTimer();
+      }
+    });
+
+    // Ensures a clean reset if the page is restored from the browser's back/forward cache
+    window.addEventListener('pageshow', (event) => {
+      if (event.persisted) {
+        resetTimer();
+        startTimer();
+      }
+    });
+
+    // Start the timer initially when the page loads
+    startTimer();
+  </script>
+
+</body>
+</html>
